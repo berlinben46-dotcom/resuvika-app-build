@@ -166,12 +166,46 @@ async function exportPng(){
   await shareFile(`Resuvika-${stamp()}.png`,c.toDataURL('image/png').split(',')[1],'image/png',true);
 }
 function showPairing(){
-  const body=sheet('Connect your laptop');body.append(el('p','On your laptop, open Resuvika Omniball → Connect tablet. Copy its full pairing link here. Both devices must use the same Wi-Fi or hotspot.'));
-  const label=el('label','Laptop pairing link');const input=el('input');input.type='url';input.placeholder='http://192.168.…:8080/ipad.html?token=…';input.id='pairing-link';label.append(input);body.append(label,button('Open companion',async()=>{
+  const body=sheet('🛰️ Satellite Remote Control');
+  const sync = window.syncManager;
+  if (sync?.isConnected) {
+    body.append(el('p', `Connected live to Laptop (${sync.hostInfo?.ip}:${sync.hostInfo?.port}). Anything you write or draw here appears on your laptop screen instantly!`, 'status'));
+    body.append(button('Disconnect Satellite Remote', () => { sync.disconnectSatellite(); closeSheet(); }));
+    return;
+  }
+  body.append(el('p','Connect wirelessly on the same Wi-Fi without any cables! On your laptop, click "Waiting for tablet" to see your Wi-Fi IP and 6-digit code.'));
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem('resuvika_satellite_last') || '{}'); } catch {}
+
+  const ipLbl = el('label', 'Laptop Wi-Fi IP Address');
+  const ipIn = el('input'); ipIn.type = 'text'; ipIn.placeholder = 'e.g. 192.168.1.12'; ipIn.value = saved.ip || '';
+  ipLbl.append(ipIn);
+
+  const portLbl = el('label', 'Port (default 8080)');
+  const portIn = el('input'); portIn.type = 'number'; portIn.value = saved.port || '8080';
+  portLbl.append(portIn);
+
+  const pinLbl = el('label', '6-Digit Match Code');
+  const pinIn = el('input'); pinIn.type = 'number'; pinIn.placeholder = 'e.g. 482910';
+  pinLbl.append(pinIn);
+
+  const statusMsg = el('p', '', 'status');
+  body.append(ipLbl, portLbl, pinLbl, button('🛰️ Connect as Satellite Remote', async () => {
+    statusMsg.textContent = 'Connecting to laptop…';
+    try {
+      await sync.connectSatellite({ ip: ipIn.value, port: portIn.value, pin: pinIn.value });
+      closeSheet();
+      window.showToast?.('🛰️ Satellite Remote Connected! Draw or type here to control laptop live.', 4000);
+    } catch (err) {
+      statusMsg.textContent = err.message || 'Could not connect. Check Wi-Fi & code.';
+    }
+  }, 'primary'), statusMsg);
+
+  body.append(el('h2', 'Or open in browser via QR link'));
+  const label=el('label','Full pairing link');const input=el('input');input.type='url';input.placeholder='http://192.168.…:8080/ipad.html?token=…';input.id='pairing-link';label.append(input);body.append(label,button('Open browser companion',async()=>{
     const url=validatePairingLink(input.value);await persist();
-    // Never navigate the native WebView/bridge to a remote desktop page.
     if(native)await Browser.open({url});else window.open(url,'_blank','noopener');
-  },'primary'),el('p','A mobile purchase unlocks this mobile app. The laptop uses its own desktop license.','muted'));
+  }));
 }
 async function refreshCustomer(){
   if(!configured)return;
