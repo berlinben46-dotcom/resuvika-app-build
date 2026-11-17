@@ -1,0 +1,63 @@
+name: Android testing APK or signed Play bundle
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Build a signed Play AAB (requires signing secrets and live store configuration)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      RC_ANDROID_PUBLIC_KEY: ${{ vars.RC_ANDROID_PUBLIC_KEY }}
+      PRIVACY_URL: ${{ vars.PRIVACY_URL }}
+      TERMS_URL: ${{ vars.TERMS_URL }}
+      SUPPORT_EMAIL: ${{ vars.SUPPORT_EMAIL }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - run: npm test
+      - run: npm run sync
+      - name: Verify production purchase and policy settings
+        if: inputs.release
+        run: npm run check:release -- android
+      - name: Restore private upload keystore
+        if: inputs.release
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          test -n "$KEYSTORE_BASE64"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+      - name: Build signed Play app bundle
+        if: inputs.release
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/upload.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: bash ./gradlew :app:bundleRelease --no-daemon
+      - name: Build preview APK
+        if: ${{ !inputs.release }}
+        working-directory: android
+        run: bash ./gradlew :app:assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Resuvika-Omniball-Android-${{ inputs.release && 'Play-AAB' || 'Preview-APK' }}
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Resuvika Omniball — iPad companion</title>
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Vikashya Pen">
+
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .ipad-status-bar {
+      position: fixed;
+      top: 8px;
+      left: 12px;
+      z-index: 150;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    }
+    .ipad-live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+    }
+    .ipad-live-dot.disconnected {
+      background: #f43f5e;
+      box-shadow: 0 0 10px #f43f5e;
+    }
+    .ipad-room-pill {
+      background: rgba(59, 130, 246, 0.25);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: #60a5fa;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-family: var(--font-mono);
+      cursor: pointer;
+    }
+    .ipad-fullscreen-btn {
+      position: fixed;
+      top: 8px;
+      right: 12px;
+      z-index: 150;
+      background: rgba(15, 23, 42, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #f8fafc;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="theme-dark tablet-app">
+
+  <!-- iPad Top Status Bar with Room Code Trigger -->
+  <div class="ipad-status-bar">
+    <span class="ipad-live-dot" id="ipad-status-dot"></span>
+    <span id="ipad-status-text">Connecting to computer…</span>
+    <span class="ipad-room-pill" id="ipad-room-display">Local pairing</span>
+  </div>
+
+  <button class="ipad-fullscreen-btn" id="ipad-fs-btn" title="Toggle Fullscreen">⛶ Fullscreen</button>
+
+  <!-- Main Canvas Container -->
+  <div id="canvas-container">
+    <video id="screen-video" autoplay playsinline muted style="display: none;"></video>
+    <canvas id="bg-canvas"></canvas>
+    <canvas id="draw-canvas"></canvas>
+    <canvas id="laser-canvas"></canvas>
+  </div>
+
+  <div class="tablet-input-mode"><button id="touch-draw-mode" class="active" title="Draw with a finger or Pencil">Touch + Pencil</button><button id="pencil-only-mode" title="Ignore fingers on the drawing area">Pencil only</button><button id="tablet-toolbar-toggle" aria-expanded="true">Hide tools</button></div>
+  <!-- iPad Touch Toolbar -->
+  <header id="main-toolbar" class="glass-toolbar" style="top: auto; bottom: 16px;">
+    <!-- Brand -->
+    <div class="toolbar-section brand-section">
+      <div class="brand-logo">
+        <img src="assets/vikashya.png" alt="Vikashya Resuvika" width="52">
+        <span class="brand-text">Resuvika Omniball</span>
+      </div>
+      
+      <!-- Board mode -->
+      <div class="mode-selector">
+        <button class="mode-btn active" data-bg="whiteboard">⚪ White</button>
+        <button class="mode-btn" data-bg="blackboard">⚫ Dark</button>
+        <button class="mode-btn" data-bg="chalkboard">🟢 Chalk</button>
+        <button class="mode-btn" data-bg="grid">📐 Grid</button>
+      </div>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- Drawing Tools -->
+    <div class="toolbar-section tools-section">
+      <button class="tool-btn active" data-tool="pen" title="Apple Pencil (P)">
+        <span class="btn-icon">✏️</span>
+        <span class="btn-label">Pen</span>
+      </button>
+
+      <button class="tool-btn" data-tool="highlighter" title="Highlighter (H)">
+        <span class="btn-icon">🖍️</span>
+        <span class="btn-label">Highlight</span>
+      </button>
+
+      <button class="tool-btn" data-tool="laser" title="Laser Pointer (L)">
+        <span class="btn-icon">⚡</span>
+        <span class="btn-label">Laser</span>
+      </button>
+
+      <!-- Shapes Dropdown -->
+      <div class="dropdown-wrapper">
+        <button class="tool-btn" id="shapes-dropdown-btn" title="Shapes (S)">
+          <span class="btn-icon" id="active-shape-icon">📐</span>
+          <span class="btn-label" id="active-shape-name">Shapes ▾</span>
+        </button>
+
+        <button id="shape-picker-toggle" class="shape-picker-toggle" type="button" title="Choose a different shape" aria-label="Choose shape" aria-expanded="false">▾</button>
+        <div class="shapes-popover glass-panel" id="shapes-menu" style="bottom: calc(100% + 12px); top: auto;">
+          <div class="shapes-grid">
+            <button class="shape-opt active" data-shape="rect"><span class="opt-icon">▭</span> Rect</button>
+            <button class="shape-opt" data-shape="rounded-rect"><span class="opt-icon">▢</span> Round</button>
+            <button class="shape-opt" data-shape="circle"><span class="opt-icon">◯</span> Circle</button>
+            <button class="shape-opt" data-shape="line"><span class="opt-icon">╱</span> Line</button>
+            <button class="shape-opt" data-shape="arrow"><span class="opt-icon">➔</span> Arrow</button>
+            <button class="shape-opt" data-shape="double-arrow"><span class="opt-icon">⬄</span> Dual</button>
+            <button class="shape-opt" data-shape="triangle"><span class="opt-icon">△</span> Tri</button>
+            <button class="shape-opt" data-shape="axes"><span class="opt-icon">✛</span> XY-Axis</button>
+            <button class="shape-opt" data-shape="step-badge"><span class="opt-icon">①</span> Step 1-2-3</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🪣 PAINT BUCKET FILL TOOL -->
+      <button class="tool-btn" data-tool="bucket" title="Paint Bucket: Click any shape to fill it!">
+        <span class="btn-icon">🪣</span>
+        <span class="btn-label">Fill</span>
+      </button>
+
+      <!-- DIRECT SHAPE FILL BAR -->
+      <div class="fill-selector-wrap" title="Shape Fill Mode">
+        <span class="fill-label">Fill:</span>
+        <button class="fill-btn active" data-fill="none" title="No Fill (Outline only)">🚫 Off</button>
+        <button class="fill-btn" data-fill="tint" title="25% Soft Tint Fill">🎨 Tint</button>
+        <button class="fill-btn" data-fill="solid" title="100% Solid Color Fill">⬛ Solid</button>
+      </div>
+
+      <!-- ✍️ ON-SCREEN TEXT TOOL -->
+      <button class="tool-btn" data-tool="text" title="Screen Text: Tap anywhere to type directly on screen!">
+        <span class="btn-icon">✍️</span>
+        <span class="btn-label">Text</span>
+      </button>
+
+      <!-- Eraser -->
+      <button class="tool-btn" data-tool="eraser-stroke" title="Eraser (E)">
+        <span class="btn-icon">🧹</span>
+        <span class="btn-label">Eraser</span>
+      </button>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- Color Palette -->
+    <div class="toolbar-section style-section">
+      <div class="color-palette" id="color-palette">
+        <button class="color-swatch active" style="--c: #ef4444;" data-color="#ef4444"></button>
+        <button class="color-swatch" style="--c: #3b82f6;" data-color="#3b82f6"></button>
+        <button class="color-swatch" style="--c: #10b981;" data-color="#10b981"></button>
+        <button class="color-swatch" style="--c: #f59e0b;" data-color="#f59e0b"></button>
+        <button class="color-swatch" style="--c: #8b5cf6;" data-color="#8b5cf6"></button>
+        <button class="color-swatch" style="--c: #ffffff;" data-color="#ffffff"></button>
+        <button class="color-swatch" style="--c: #0f172a;" data-color="#0f172a"></button>
+        
+        <label class="custom-color-label" title="Custom Color">
+          <input type="color" id="custom-color-input" value="#ef4444">
+          <span class="color-picker-icon">🎨</span>
+        </label>
+      </div>
+
+      <div class="stroke-slider-wrap">
+        <span class="size-preview-dot" id="size-preview"></span>
+        <input type="range" id="stroke-size-slider" min="1" max="50" value="4">
+        <span class="size-number" id="size-val">4px</span>
+      </div>
+    </div>
+
+    <div class="toolbar-divider"></div>
+
+    <!-- Actions -->
+    <div class="toolbar-section action-section">
+      <button class="icon-btn" id="btn-undo" title="Undo">↩️</button>
+      <button class="icon-btn" id="btn-redo" title="Redo">↪️</button>
+      <button class="pill-btn clear-drawings-btn" id="btn-clear" title="Clear drawings on every connected device; Undo restores them">Clear screen</button>
+      
+      <button class="pill-btn highlight-btn" id="btn-toggle-notepad" title="Class Notepad & Evernote Suite">
+        <span class="btn-icon">📝</span>
+        <span>Notes</span>
+      </button>
+
+      <button class="pill-btn rec-pen-btn" id="btn-recording-mode" title="Screen Pen / Video Recording Mode: Compact tools for recording and live presentations">
+        <span class="btn-icon">🎥</span>
+        <span>Screen Pen</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Inbuilt Notepad (Evernote / OneNote style with WhatsApp & 1-Click Share) -->
+  <aside id="floating-notepad" class="glass-panel notepad-panel hidden">
+    <div class="notepad-header" id="notepad-drag-handle">
+      <div class="notepad-title-group">
+        <span class="notepad-icon">📝</span>
+        <span class="notepad-title">Resuvika Notes & Notebooks</span>
+      </div>
+      <div class="notepad-header-actions">
+        <button class="np-action-btn" id="np-pin-btn" title="Pin note on top">📌</button>
+        <button class="np-action-btn" id="np-max-btn" title="Maximize / Restore window size">⛶</button>
+        <button class="np-action-btn" id="np-minimize-btn" title="Minimize">−</button>
+        <button class="np-action-btn" id="np-close-btn" title="Close">✕</button>
+      </div>
+    </div>
+
+    <!-- Notebook Search & Note Tabs -->
+    <div class="notepad-search-row">
+      <input type="text" id="np-search-input" class="np-search-bar" placeholder="🔍 Search notes or topics...">
+    </div>
+
+    <div class="notepad-tabs-bar" id="np-tabs-bar">
+      <button class="np-add-tab-btn" id="np-add-tab" title="Create New Note">+ New Note</button>
+    </div>
+
+    <!-- Rich Evernote / OneNote Format Toolbar -->
+    <div class="notepad-format-bar">
+      <div class="fmt-group">
+        <button class="np-fmt-btn" data-fmt="h1" title="Heading 1">H1</button>
+        <button class="np-fmt-btn" data-fmt="h2" title="Heading 2">H2</button>
+        <button class="np-fmt-btn" data-fmt="h3" title="Heading 3">H3</button>
+      </div>
+      <div class="fmt-group">
+        <button class="np-fmt-btn" data-fmt="bold" title="Bold"><b>B</b></button>
+        <button class="np-fmt-btn" data-fmt="italic" title="Italic"><i>I</i></button>
+        <button class="np-fmt-btn" data-fmt="underline" title="Underline"><u>U</u></button>
+        <button class="np-fmt-btn" data-fmt="strike" title="Strikethrough"><s>S</s></button>
+        <button class="np-fmt-btn" data-fmt="highlight" title="Highlight">🖍️</button>
+      </div>
+      <div class="fmt-group">
+        <button class="np-fmt-btn" data-fmt="check" title="Add To-Do Checkbox">☑</button>
+        <button class="np-fmt-btn" data-fmt="toggle-check" title="Toggle Checkbox Complete">✓</button>
+        <button class="np-fmt-btn" data-fmt="bullet" title="Bullet List">•</button>
+        <button class="np-fmt-btn" data-fmt="number" title="Numbered List">1.</button>
+        <button class="np-fmt-btn" data-fmt="quote" title="Quote">❝</button>
+        <button class="np-fmt-btn" data-fmt="code" title="Code / Formula">&lt;/&gt;</button>
+        <button class="np-fmt-btn" data-fmt="divider" title="Divider Line">—</button>
+        <button class="np-fmt-btn" id="np-template-btn" title="Insert Pre-made Student / Lecture Template">📑 Template</button>
+      </div>
+    </div>
+
+    <div class="notepad-body">
+      <div class="np-editor-meta-bar">
+        <label class="np-size-label">Font <input id="np-font-size" type="number" min="10" max="72" value="16" aria-label="Notepad font size"> px</label>
+        <span class="np-word-count" id="np-word-count">0 words • 0 chars</span>
+      </div>
+      <textarea id="np-editor" placeholder="Write lesson outline, formulas, meeting notes, or ideas here..."></textarea>
+    </div>
+
+    <div class="notepad-footer">
+      <div class="np-footer-status">
+        <span class="np-status" id="np-save-status">💾 Auto-saved</span>
+      </div>
+      
+      <!-- 1-Click WhatsApp & Export Action Buttons -->
+      <div class="np-footer-share-group">
+        <button class="np-share-btn draw-btn" id="np-draw-canvas" title="Switch to Pen and draw diagram directly on screen">
+          <span class="share-icon">✏️</span> Draw
+        </button>
+        <button class="np-share-btn wa-btn" id="np-share-whatsapp" title="Share directly to WhatsApp in 1-click">
+          <span class="share-icon">💬</span> WhatsApp
+        </button>
+        <button class="np-share-btn share-icon-btn" id="np-share-native" title="Share via any app (Telegram, Drive, Email, etc.)">
+          <span class="share-icon">📤</span> Share
+        </button>
+        <button class="np-share-btn pdf-btn" id="np-export-pdf" title="Download / Print Clean PDF Document">
+          <span class="share-icon">📄</span> PDF
+        </button>
+        <button class="np-share-btn txt-btn" id="np-export-txt" title="Download as Markdown/Text file">
+          <span class="share-icon">📥</span> .md
+        </button>
+        <button class="np-stamp-btn" id="np-stamp-to-canvas" title="Stamp note onto Whiteboard as a visual card">
+          📌 Stamp
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Clean Bottom Ad Banner Strip (Free with Ads + 1-Click Remove Ads) -->
+  <aside id="app-ad-banner" class="app-ad-strip" aria-label="Sponsor Banner">
+    <div class="ad-content-box">
+      <span class="ad-badge">AD</span>
+      <span class="ad-text">Resuvika Omni Pen · Vikashya Resuvika Private Limited · All Features Free</span>
+    </div>
+    <button class="ad-remove-btn" id="btn-remove-ads" title="Upgrade to Pro: Remove all ads forever">
+      ✨ Remove Ads
+    </button>
+  </aside>
+
+  <div id="toast" class="toast-box"></div>
+
+  <!-- Scripts (Includes PeerJS for WebRTC Cross-Network Sync) -->
+  <aside id="text-controls" class="text-controls" aria-label="Text size controls">
+    <label for="text-font-size">Text size</label><button id="text-smaller" aria-label="Smaller text">A−</button>
+    <input id="text-font-size" type="number" min="8" max="240" value="32" step="1" aria-label="Text size in pixels"><span>px</span>
+    <button id="text-larger" aria-label="Larger text">A+</button><span class="text-help">Tap existing text to edit</span>
+  </aside>
+  <script src="js/canvas.js"></script>
+  <script src="js/notepad.js"></script>
+  <script src="js/sync-local.js"></script>
+  <script src="js/presentation.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/tool-preferences.js"></script>
+
+  <script>
+      document.getElementById('ipad-room-display').textContent = 'Local pairing';
+      document.getElementById('ipad-fs-btn').addEventListener('click', async () => {
+        try { if (document.fullscreenElement) await document.exitFullscreen?.(); else await document.documentElement.requestFullscreen?.(); } catch {}
+      });
+    </script>
+</body>
+</html>

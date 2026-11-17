@@ -1,0 +1,12 @@
+{
+  "appId": "com.vikashya.resuvika.omniball.mobile",
+  "appName": "Resuvika Omniball",
+  "webDir": "www",
+  "backgroundColor": "#ffffff",
+  "android": { "allowMixedContent": false, "backgroundColor": "#ffffff" },
+  "ios": { "backgroundColor": "#ffffff", "contentInset": "never", "preferredContentMode": "mobile" },
+  "plugins": {
+    "CapacitorHttp": { "enabled": false },
+    "CapacitorCookies": { "enabled": false }
+  }
+}

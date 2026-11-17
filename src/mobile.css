@@ -1,0 +1,101 @@
+:root { color-scheme:light; --mobile-ink:#16243a; }
+body.mobile-app { background:#fff; color:var(--mobile-ink); font-family:system-ui,-apple-system,sans-serif; }
+.mobile-app .glass-toolbar,.mobile-app .glass-panel { background:#fff; color:#16243a; border:1px solid #d6dfea; box-shadow:0 6px 28px #14284420; backdrop-filter:none; }
+.mobile-app #compact-controls { top:calc(env(safe-area-inset-top) + 10px); left:max(10px,env(safe-area-inset-left)); max-width:calc(100vw - 20px); flex-wrap:wrap; }
+.mobile-app #compact-controls button { background:#fff; color:#1e3a5f; border:1px solid #c6d4e6; min-height:42px; }
+.mobile-app #compact-controls #mobile-pro { background:#174bb5; color:#fff; }
+.mobile-app #compact-controls #tablet-toolbar-toggle { background:#174bb5; color:#fff; }
+.mobile-app #main-toolbar { top:calc(env(safe-area-inset-top) + 110px)!important; bottom:auto!important; max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 200px); background:#fff; width:min(960px,calc(100vw - 20px)); margin:0; left:50%!important; transform:translateX(-50%)!important; }
+.mobile-app .tablet-input-mode { top:calc(env(safe-area-inset-top) + 65px); }
+.mobile-app .ipad-status-bar { display:none!important; }
+.mobile-app #text-controls { bottom:calc(env(safe-area-inset-bottom) + 12px + var(--keyboard-lift,0px)); background:#fff; color:#16243a; border:1px solid #b6c4d7; max-width:calc(100vw - 24px); }
+.mobile-app #text-controls .text-help { display:none; }
+.mobile-app.menus-hidden:not(.recording-mode).mobile-text-tool #text-controls { display:flex!important; }
+.mobile-app .screen-text-editor { background:#fff; border-color:#9eb4d1; }
+.mobile-app button,.mobile-app input,.mobile-app textarea { font:inherit; }
+.mobile-app .tool-btn,.mobile-app .shape-opt,.mobile-app .icon-btn,.mobile-app .pill-btn,.mobile-app .fill-btn,.mobile-app .mode-btn { color:#243a55; border-color:#d7e0eb; }
+.mobile-app .tool-btn.active,.mobile-app .shape-opt.active,.mobile-app .mode-btn.active { color:#1649bb; background:#eaf1ff; border-color:#a0bbed; }
+.mobile-app .brand-text { color:#1f365c; }
+.mobile-app .notepad-panel { top:calc(env(safe-area-inset-top) + 120px); max-height:calc(100dvh - 170px); width:min(420px,calc(100vw - 20px)); }
+.mobile-app #np-editor { background:#fff; color:#182a44; }
+.mobile-app #np-font-size,.mobile-app #text-font-size { color:#182a44; background:#fff; border:1px solid #b6c4d7; }
+.mobile-app #recording-panel { background:#fff; color:#152a46; top:calc(env(safe-area-inset-top) + 70px); }
+.mobile-app #vikashya-brand { bottom:max(10px,env(safe-area-inset-bottom)); background:#ffffffdf; color:#264567; border:1px solid #d1ddea; }
+.mobile-app.mobile-text-tool:not(.recording-mode) #vikashya-brand { bottom:calc(env(safe-area-inset-bottom) + 80px + var(--keyboard-lift,0px)); }
+.mobile-app #recording-restore-edge { height:calc(env(safe-area-inset-top) + 18px); }
+.mobile-app .clear-drawings-btn { color:#a5202d; background:#fff1f2; }
+.mobile-dialog { position:fixed; inset:0; background:#10203655; z-index:1500; display:flex; align-items:center; justify-content:center; padding:calc(env(safe-area-inset-top) + 16px) max(12px,env(safe-area-inset-right)) calc(env(safe-area-inset-bottom) + 16px) max(12px,env(safe-area-inset-left)); touch-action:auto; }
+.mobile-dialog[hidden] { display:none!important; }
+.mobile-sheet { background:#fff; color:#16243a; border-radius:20px; width:min(580px,100%); max-height:100%; overflow:auto; padding:24px; box-shadow:0 18px 80px #172b4a44; }
+.mobile-sheet h1 { font-size:26px; line-height:1.15; margin:8px 0 14px; }
+.mobile-sheet h2 { font-size:19px; margin:24px 0 12px; }
+.mobile-sheet p { line-height:1.5; margin:10px 0; font-size:15px; }
+.mobile-sheet .eyebrow { color:#425f86; font-weight:750; font-size:11px; letter-spacing:1.2px; }
+.mobile-sheet button { border:1px solid #becde0; color:#173b67; background:#fff; border-radius:10px; padding:12px 14px; margin:4px 6px 4px 0; min-height:44px; cursor:pointer; }
+.mobile-sheet button.primary { background:#174bb5; border-color:#174bb5; color:#fff; }
+.mobile-sheet button:disabled { opacity:.55; cursor:wait; }
+.mobile-sheet .close-sheet { float:right; margin:-8px -8px 0 8px; }
+.mobile-sheet input { width:100%; padding:12px; border:1px solid #b8c9de; border-radius:9px; background:#fff; color:#182c47; margin:8px 0; box-sizing:border-box; user-select:text; }
+.mobile-sheet label { display:block; margin-top:12px; font-size:14px; }
+.mobile-sheet .plan { display:block; width:100%; margin:8px 0; text-align:left; }
+.mobile-sheet .plan strong { display:block; }
+.mobile-sheet .plan small { display:block; margin-top:5px; font-size:13px; }
+.mobile-sheet .muted { color:#576e88; font-size:13px; }
+.mobile-sheet .status { background:#f0f5fd; border:1px solid #d7e4f6; padding:12px; border-radius:10px; }
+.mobile-sheet .board-row { display:flex; align-items:center; justify-content:space-between; gap:8px; border-bottom:1px solid #e0e7f0; padding:8px 0; }
+.mobile-sheet .board-row span { word-break:break-word; }
+.mobile-sheet .board-row button { flex-shrink:0; }
+.mobile-app.read-only #np-editor { opacity:.7; }
+.mobile-app .text-edit-actions button { min-height:42px; }
+@media(max-width:600px) { .mobile-app #compact-controls { gap:4px; } .mobile-app #compact-controls button { padding:6px 9px; font-size:12px; } .mobile-sheet { padding:20px; } .mobile-app #compact-controls #recording-options { font-size:11px; } .mobile-app #ipad-fs-btn { display:none; } }
+
+/* Mobile shell: a single movable button, with compact controls on demand. */
+.mobile-app #main-toolbar,.mobile-app .tablet-input-mode,.mobile-app #compact-controls { display:none!important; }
+.mobile-app #text-controls { display:none!important; }
+.mobile-app.mobile-text-tool:not(.recording-mode) #text-controls { display:flex!important; }
+.mobile-app #vikashya-brand { border:0;box-shadow:none;background:rgba(255,255,255,.86);color:#66758d;left:14px;gap:0 6px;font-size:8px;letter-spacing:1px;padding:4px 6px; }
+.mobile-app #vikashya-brand img { width:32px;height:25px; }
+.mobile-app #vikashya-brand small { font-size:8px;letter-spacing:0; }
+.omni-shell { position:fixed;z-index:900;touch-action:none;--omni-accent:#5557d9; }
+.omni-bubble { display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;background:var(--omni-accent);color:white;border:1px solid #ffffff80;border-radius:50%;padding:14px;box-shadow:0 6px 24px #25235f33,0 1px 3px #19234720;cursor:pointer;touch-action:none;transition:box-shadow .15s; }
+.omni-bubble svg { width:100%;height:100%;pointer-events:none; }
+.omni-bubble[aria-expanded=true] { box-shadow:0 0 0 5px #6669e41a,0 6px 24px #25235f26; }
+.omni-palette { position:absolute;width:272px;max-width:calc(100vw - 24px);max-height:calc(100dvh - 110px);overflow:auto;padding:14px;border:1px solid #e3e7ef;border-radius:20px;background:#fffffff5;box-shadow:0 14px 50px #1f2d4926,0 2px 8px #172c4910;color:#19273e;touch-action:pan-y;backdrop-filter:blur(20px); }
+.omni-palette[hidden] { display:none; }
+.omni-palette-head { display:flex;align-items:center;justify-content:space-between;margin-bottom:12px; }
+.omni-palette-head strong { font-size:14px;font-weight:650;letter-spacing:-.2px; }
+.omni-small-icon { border:0;background:none;padding:5px;color:#6b7890;cursor:pointer; }
+.omni-small-icon svg { width:20px;height:20px; }
+.omni-small-icon span { display:none; }
+.omni-tool-grid,.omni-all-tools { display:grid;grid-template-columns:repeat(3,1fr);gap:8px; }
+.omni-tool,.omni-action { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:62px;padding:10px 5px;border:1px solid transparent;border-radius:12px;background:#f5f7fb;color:#43536e;font-size:11px!important;cursor:pointer;touch-action:manipulation; }
+.omni-tool svg,.omni-action svg { width:23px;height:23px; }
+.omni-tool.selected { color:var(--omni-accent,#5557d9);background:#edecff;border-color:#d4d1ff; }
+.omni-command-row { display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;padding-top:10px;border-top:1px solid #edf0f6; }
+.omni-command-row .omni-action { min-height:44px;background:none;flex-direction:row;gap:5px;font-size:11px!important;padding:5px; }
+.omni-command-row .omni-action svg { width:18px;height:18px; }
+.mobile-sheet { border:1px solid #e4e9f2;box-shadow:0 20px 80px #12254430; }
+.mobile-sheet button svg { width:20px;height:20px;vertical-align:middle;flex-shrink:0; }
+.mobile-sheet button span { margin-left:8px; }
+.mobile-sheet .omni-tool { margin:0;min-height:76px; }
+.mobile-sheet .omni-tool span { margin-left:0; }
+.mobile-sheet select { width:100%;margin:8px 0 10px;padding:12px;border:1px solid #d5ddea;border-radius:10px;color:#1c3153;background:#f8faff;font:inherit; }
+.omni-menu-list { display:flex;flex-direction:column;gap:6px; }
+.mobile-sheet .omni-menu-item { display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;border-radius:12px;background:#f5f7fc;margin:0;padding:15px; }
+.omni-menu-item svg { color:#6869cc; }
+.omni-setting-row { display:flex;flex-wrap:wrap; }
+.omni-setting-row button { display:flex;align-items:center;gap:4px; }
+.omni-favorite-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:4px 10px; }
+.mobile-sheet .omni-checkbox { display:flex;align-items:center;gap:9px;margin:8px 0;padding:8px 0; }
+.mobile-sheet .omni-checkbox input { width:18px;height:18px;margin:0;accent-color:#5557d9; }
+.mobile-sheet input[type=range] { padding:0;accent-color:#5557d9;min-height:36px; }
+.mobile-sheet input[type=color] { height:46px;max-width:100px;padding:4px; }
+.omni-swatches { display:flex;flex-wrap:wrap;gap:9px;margin:15px 0; }
+.mobile-sheet .omni-swatch { width:34px;height:34px;min-height:34px;border:1px solid #dce2ec;border-radius:50%;padding:3px;margin:0; }
+.omni-swatch span { display:none; }.omni-swatch svg { width:16px!important;height:16px!important; }
+.omni-swatch.selected { box-shadow:0 0 0 3px #bbc7e8; }
+.mobile-app.recording-mode .omni-shell { display:none!important; }
+.mobile-app #recording-panel { z-index:1200;max-height:calc(100dvh - env(safe-area-inset-top) - 90px);overflow:auto; }
+.mobile-app #floating-notepad { z-index:1100; }
+@media(prefers-reduced-motion:reduce){.omni-bubble{transition:none}}
+@media(max-height:500px){.omni-palette{max-height:calc(100dvh - 80px);padding:10px}.omni-tool{min-height:48px;padding:6px}.omni-palette-head{margin-bottom:8px}.omni-command-row{margin-top:8px;padding-top:5px}}
