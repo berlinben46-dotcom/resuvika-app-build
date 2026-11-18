@@ -18,12 +18,12 @@ jobs:
       TERMS_URL: ${{ vars.TERMS_URL }}
       SUPPORT_EMAIL: ${{ vars.SUPPORT_EMAIL }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
-      - uses: actions/setup-java@v6
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
@@ -53,7 +53,7 @@ jobs:
         if: ${{ !inputs.release }}
         working-directory: android
         run: bash ./gradlew :app:assembleDebug --no-daemon
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v4
         with:
           name: Resuvika-Omniball-Android-${{ inputs.release && 'Play-AAB' || 'Preview-APK' }}
           path: |
