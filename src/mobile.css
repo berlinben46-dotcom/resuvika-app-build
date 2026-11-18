@@ -365,6 +365,9 @@ body.pro-unlocked .mobile-bottom-bar {
   padding: 3px !important;
 }
 .mobile-app .np-mode-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
   color: #475569 !important;
   border-radius: 999px !important;
   font-weight: 600 !important;
@@ -377,7 +380,68 @@ body.pro-unlocked .mobile-bottom-bar {
 }
 .mobile-app .np-organizer {
   background: #f8fafc !important;
+  color: #0f172a !important;
   border-right: 1px solid #e2e8f0 !important;
+}
+.mobile-app .np-org-tabs {
+  background: #f1f5f9 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 8px !important;
+  gap: 6px !important;
+}
+.mobile-app .np-org-tab {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  background: transparent !important;
+  color: #475569 !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  padding: 7px 10px !important;
+}
+.mobile-app .np-org-tab.active {
+  background: #ffffff !important;
+  color: #2563eb !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08) !important;
+}
+.mobile-app .np-search-bar {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+}
+.mobile-app .np-org-add-btn {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border: 1px solid #bfdbfe !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+}
+.mobile-app .np-classpad-item,
+.mobile-app .np-classpad-header {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+}
+.mobile-app .np-pen-bar {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 8px 12px !important;
+}
+.mobile-app .np-pen-size-sel {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  padding: 5px 8px !important;
+}
+.mobile-app #floating-notepad,
+.mobile-app #floating-notepad * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 .mobile-app .np-tab,
 .mobile-app .np-rem-item {

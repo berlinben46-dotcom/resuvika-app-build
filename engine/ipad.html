@@ -283,20 +283,30 @@
   <aside id="floating-notepad" class="glass-panel notepad-panel hidden">
     <div class="notepad-header" id="notepad-drag-handle">
       <div class="notepad-title-group">
-        <button class="np-action-btn" id="np-toggle-org" title="Notebooks &amp; Reminders">🗂️</button>
-        <span class="notepad-title">Resuvika Classpad</span>
+        <button class="np-action-btn" id="np-toggle-org" title="Folders &amp; Reminders">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+        </button>
+        <span class="notepad-title">Classpad</span>
       </div>
 
       <div class="np-input-mode-switch" title="Switch between Typing and Pen">
-        <button type="button" class="np-mode-pill active" id="np-mode-keypad">⌨️ Type</button>
-        <button type="button" class="np-mode-pill" id="np-mode-pen">✏️ Draw</button>
+        <button type="button" class="np-mode-pill active" id="np-mode-keypad">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></svg>
+          <span>Type</span>
+        </button>
+        <button type="button" class="np-mode-pill" id="np-mode-pen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          <span>Draw</span>
+        </button>
       </div>
 
       <div class="notepad-header-actions">
         <button class="np-action-btn" id="np-pin-btn" title="Pin" style="display:none;">📌</button>
         <button class="np-action-btn" id="np-max-btn" title="Size" style="display:none;">⛶</button>
         <button class="np-action-btn" id="np-minimize-btn" title="Min" style="display:none;">−</button>
-        <button class="np-action-btn" id="np-close-btn" title="Close Notes">✕</button>
+        <button class="np-action-btn" id="np-close-btn" title="Close Notes">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
       </div>
     </div>
 
@@ -304,8 +314,14 @@
       <!-- Slide-over Organizer (Classpads, Chapters & Reminders) -->
       <div class="np-organizer collapsed" id="np-organizer">
         <div class="np-org-tabs">
-          <button type="button" class="np-org-tab active" id="np-org-tab-notes">📚 Folders</button>
-          <button type="button" class="np-org-tab" id="np-org-tab-reminders">⏰ Remind</button>
+          <button type="button" class="np-org-tab active" id="np-org-tab-notes">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+            <span>Folders</span>
+          </button>
+          <button type="button" class="np-org-tab" id="np-org-tab-reminders">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            <span>Remind</span>
+          </button>
         </div>
 
         <div class="np-org-pane" id="np-org-notes-pane">
@@ -366,13 +382,19 @@
             <option value="4" selected>Med</option>
             <option value="8">Thick</option>
           </select>
-          <button type="button" class="np-mini-btn" id="np-pen-eraser">🧹</button>
-          <button type="button" class="np-mini-btn" id="np-pen-undo">↩️</button>
-          <button type="button" class="np-mini-btn" id="np-pen-clear">🗑️</button>
+          <button type="button" class="np-mini-btn" id="np-pen-eraser" title="Eraser">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/></svg>
+          </button>
+          <button type="button" class="np-mini-btn" id="np-pen-undo" title="Undo">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+          </button>
+          <button type="button" class="np-mini-btn" id="np-pen-clear" title="Clear Ink">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+          </button>
         </div>
 
         <div class="notepad-body np-paper-white" id="np-paper-area">
-          <textarea id="np-editor" placeholder="Start typing notes here, or tap '✏️ Draw' above to write with your finger or stylus..."></textarea>
+          <textarea id="np-editor" placeholder="Start typing notes here, or tap 'Draw' above to write with your finger or stylus..."></textarea>
           <canvas id="np-ink-canvas"></canvas>
         </div>
 
@@ -380,10 +402,10 @@
           <span class="np-status" id="np-save-status" style="display:none;">Saved</span>
           <span class="np-word-count" id="np-word-count" style="display:none;">0 words</span>
           <div class="np-footer-share-group">
-            <button class="np-share-btn wa-btn" id="np-share-whatsapp">💬 WhatsApp</button>
-            <button class="np-share-btn pdf-btn" id="np-export-pdf">📄 PDF</button>
-            <button class="np-share-btn share-icon-btn" id="np-share-native">📤 Share</button>
-            <button class="np-stamp-btn" id="np-stamp-to-canvas">📌 To Board</button>
+            <button class="np-share-btn wa-btn" id="np-share-whatsapp">WhatsApp</button>
+            <button class="np-share-btn pdf-btn" id="np-export-pdf">PDF</button>
+            <button class="np-share-btn share-icon-btn" id="np-share-native">Share</button>
+            <button class="np-stamp-btn" id="np-stamp-to-canvas">To Board</button>
           </div>
         </div>
       </div>
