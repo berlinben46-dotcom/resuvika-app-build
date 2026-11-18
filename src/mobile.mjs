@@ -174,21 +174,21 @@ function showPairing(){
     body.append(button('Disconnect', () => { sync.disconnectSatellite(); closeSheet(); }));
     return;
   }
-  body.append(el('p','1. On your Smart TV or Laptop browser, open: https://resuvika.com/tv (or open Resuvika Omniball on Laptop).\n2. Type this phone’s 6-digit code below — it connects automatically with zero IP address!'));
+  body.append(el('p','Connect wirelessly to your Smart TV or Laptop with zero IP address and no website needed:'));
 
-  const tvUrlRow = document.createElement('div');
-  tvUrlRow.style.cssText = 'display:flex;gap:8px;align-items:center;margin:6px 0 10px;';
-  const tvUrlBtn = button('📋 Copy TV / Laptop Link (resuvika.com/tv)', async () => {
-    try {
-      await navigator.clipboard.writeText('https://resuvika.com/tv');
-      window.showToast?.('Link copied! Open it on your TV or Laptop browser.');
-    } catch {
-      window.showToast?.('Open https://resuvika.com/tv on your TV or Laptop.');
-    }
-  });
-  tvUrlBtn.style.cssText = 'width:100%;font-size:13px;';
-  tvUrlRow.append(tvUrlBtn);
-  body.append(tvUrlRow);
+  if (native && platform === 'android') {
+    const castBtn = button('📺 Cast Screen to Smart TV (Wireless / Smart View)', async () => {
+      try {
+        await FloatingOverlay.openCastSettings();
+      } catch (err) {
+        window.showToast?.(err?.message || 'Swipe down Quick Settings and tap Smart View / Cast.', 4000);
+      }
+    }, 'primary');
+    castBtn.style.cssText = 'width:100%;margin-bottom:10px;';
+    body.append(castBtn);
+  }
+
+  body.append(el('p','Or open Resuvika Omniball on your Laptop / 2nd device and pair with this 6-digit code:', 'muted'));
 
   const myCodeCard = document.createElement('div');
   myCodeCard.style.cssText = 'background:#f1f5f9;border:1px solid #cbd5e1;border-radius:14px;padding:12px;text-align:center;margin:8px 0 14px;';

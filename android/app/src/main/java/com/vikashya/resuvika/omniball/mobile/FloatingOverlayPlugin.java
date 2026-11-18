@@ -39,6 +39,15 @@ public class FloatingOverlayPlugin extends Plugin {
             catch(Exception e){call.reject("Open Android Settings > Apps > Special app access > Display over other apps to allow Omniball.");}
         });
     }
+    @PluginMethod public void openCastSettings(PluginCall call){
+        getActivity().runOnUiThread(()->{
+            try{getActivity().startActivity(new Intent(Settings.ACTION_CAST_SETTINGS));call.resolve();}
+            catch(Exception e){
+                try{getActivity().startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));call.resolve();}
+                catch(Exception ex){call.reject("Open your phone's Quick Settings and tap Smart View / Cast to mirror to Smart TV.");}
+            }
+        });
+    }
     @PluginMethod public void configure(PluginCall call){
         JSObject s=call.getObject("settings",new JSObject());
         String orientation=s.optString("orientation","portrait");
