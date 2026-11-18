@@ -378,10 +378,48 @@ body.pro-unlocked .mobile-bottom-bar {
   color: #2563eb !important;
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.1) !important;
 }
-.mobile-app .np-organizer {
-  background: #f8fafc !important;
+.mobile-app .np-organizer,
+.mobile-app .np-org-pane,
+.mobile-app .np-rem-list,
+.mobile-app .np-classpad-list {
+  background: var(--np-sidebar-bg, #f8fafc) !important;
   color: #0f172a !important;
+}
+.mobile-app .np-organizer {
   border-right: 1px solid #e2e8f0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+.mobile-app .np-organizer.collapsed {
+  display: none !important;
+}
+.mobile-app .np-sidebar-themes {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 10px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+}
+.mobile-app .np-theme-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  margin-right: 2px;
+}
+.mobile-app .np-theme-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.22);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.mobile-app .np-theme-dot.active {
+  box-shadow: 0 0 0 2.5px #2563eb;
+  transform: scale(1.12);
 }
 .mobile-app .np-org-tabs {
   background: #f1f5f9 !important;

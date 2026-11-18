@@ -318,6 +318,10 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
             <span>Folders</span>
           </button>
+          <button type="button" class="np-org-tab" id="np-org-tab-todo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            <span>To-Do</span>
+          </button>
           <button type="button" class="np-org-tab" id="np-org-tab-reminders">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
             <span>Remind</span>
@@ -342,6 +346,24 @@
             <button type="button" id="np-rem-add-btn" class="np-org-add-btn" style="width:100%;">⏰ Add Reminder</button>
           </div>
           <div class="np-rem-list" id="np-rem-list"></div>
+        </div>
+
+        <div class="np-org-pane hidden" id="np-org-todo-pane">
+          <div class="np-rem-form">
+            <input type="text" id="np-todo-input" class="np-search-bar" placeholder="Add a to-do task...">
+            <button type="button" id="np-todo-add-btn" class="np-org-add-btn" style="width:100%;">+ Add To-Do</button>
+          </div>
+          <div class="np-rem-list" id="np-todo-list"></div>
+        </div>
+
+        <div class="np-sidebar-themes" id="np-sidebar-themes" title="Customize Sidebar Color">
+          <span class="np-theme-lbl">Theme</span>
+          <button type="button" class="np-theme-dot active" data-bg="#f8fafc" style="background:#f8fafc" title="Clean White"></button>
+          <button type="button" class="np-theme-dot" data-bg="#e7f8ed" style="background:#e7f8ed" title="WhatsApp Mint"></button>
+          <button type="button" class="np-theme-dot" data-bg="#e0f2fe" style="background:#e0f2fe" title="Sky Blue"></button>
+          <button type="button" class="np-theme-dot" data-bg="#fef9c3" style="background:#fef9c3" title="Warm Cream"></button>
+          <button type="button" class="np-theme-dot" data-bg="#f3e8ff" style="background:#f3e8ff" title="Lavender"></button>
+          <button type="button" class="np-theme-dot" data-bg="#0f172a" style="background:#0f172a" title="Midnight"></button>
         </div>
       </div>
 

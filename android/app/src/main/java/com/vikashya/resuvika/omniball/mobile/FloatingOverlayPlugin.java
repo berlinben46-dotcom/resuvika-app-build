@@ -170,11 +170,22 @@ public class FloatingOverlayPlugin extends Plugin {
             Intent intent=new Intent(getContext(),ReminderReceiver.class).putExtra("title",title).putExtra("id",id);
             android.app.PendingIntent pi=android.app.PendingIntent.getBroadcast(getContext(),id,intent,android.app.PendingIntent.FLAG_UPDATE_CURRENT|android.app.PendingIntent.FLAG_IMMUTABLE);
             if(am!=null){
-                if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M)am.setAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP,triggerAt,pi);
-                else am.set(android.app.AlarmManager.RTC_WAKEUP,triggerAt,pi);
+                if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.LOLLIPOP){
+                    android.app.PendingIntent showPi=android.app.PendingIntent.getActivity(getContext(),id,new Intent(getContext(),MainActivity.class),android.app.PendingIntent.FLAG_UPDATE_CURRENT|android.app.PendingIntent.FLAG_IMMUTABLE);
+                    am.setAlarmClock(new android.app.AlarmManager.AlarmClockInfo(triggerAt,showPi),pi);
+                }else{
+                    am.set(android.app.AlarmManager.RTC_WAKEUP,triggerAt,pi);
+                }
             }
             call.resolve();
         }catch(Exception e){call.reject("Could not schedule reminder: "+e.getMessage());}
+    }
+    @PluginMethod public void showReminderNow(PluginCall call){
+        String title=call.getString("title","Class Reminder");
+        int id=call.getInt("id",(int)(System.currentTimeMillis()&0x7fffffff));
+        Intent intent=new Intent(getContext(),ReminderReceiver.class).putExtra("title",title).putExtra("id",id);
+        new ReminderReceiver().onReceive(getContext(),intent);
+        call.resolve();
     }
 
     @PluginMethod public void startTvServer(PluginCall call){

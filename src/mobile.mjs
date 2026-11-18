@@ -360,11 +360,81 @@ async function start(){
   });
   window.scheduleNativeReminder = (rem) => {
     if (!native || platform !== 'android' || !rem?.time) return;
-    const triggerAt = Date.parse(rem.time);
+    const triggerAt = new Date(rem.time).getTime();
     if (!Number.isFinite(triggerAt)) return;
     const id = Math.abs(String(rem.id || Date.now()).split('').reduce((a, c) => ((a << 5) - a + c.charCodeAt(0)) | 0, 0));
     FloatingOverlay.scheduleReminder({ id, title: rem.title || 'Class Reminder', triggerAt }).catch(() => {});
   };
+  window.showNativeReminderNow = (rem) => {
+    if (!native || platform !== 'android') return;
+    const id = Math.abs(String(rem?.id || Date.now()).split('').reduce((a, c) => ((a << 5) - a + c.charCodeAt(0)) | 0, 0));
+    FloatingOverlay.showReminderNow({ id, title: rem?.title || 'Class Reminder' }).catch(() => {});
+  };
+
+  // To-Do List inside Classpad Organizer
+  const TODO_KEY = 'resuvika_todo_list_v1';
+  let todos = parse(localStorage.getItem(TODO_KEY), []);
+  if (!Array.isArray(todos)) todos = [];
+  const renderTodos = () => {
+    const list = $('np-todo-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!todos.length) {
+      list.append(el('p', 'No to-do tasks yet. Add your first task above!', 'muted'));
+      return;
+    }
+    for (const item of todos) {
+      const row = document.createElement('div');
+      row.className = 'np-rem-item' + (item.done ? ' done' : '');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!item.done;
+      cb.onchange = () => {
+        item.done = cb.checked;
+        localStorage.setItem(TODO_KEY, JSON.stringify(todos));
+        renderTodos();
+      };
+      const txt = document.createElement('span');
+      txt.className = 'np-rem-title';
+      txt.style.flex = '1';
+      txt.textContent = item.title;
+      const del = document.createElement('button');
+      del.className = 'np-rem-del';
+      del.textContent = '×';
+      del.onclick = () => {
+        todos = todos.filter((t) => t.id !== item.id);
+        localStorage.setItem(TODO_KEY, JSON.stringify(todos));
+        renderTodos();
+      };
+      row.append(cb, txt, del);
+      list.append(row);
+    }
+  };
+  renderTodos();
+  $('np-todo-add-btn')?.addEventListener('click', () => {
+    const inp = $('np-todo-input');
+    const title = inp?.value.trim();
+    if (!title) return;
+    todos.unshift({ id: 'todo-' + Date.now(), title, done: false });
+    localStorage.setItem(TODO_KEY, JSON.stringify(todos));
+    inp.value = '';
+    renderTodos();
+  });
+
+  // WhatsApp-style Left Sidebar Color Customizer
+  const SIDEBAR_THEME_KEY = 'resuvika_sidebar_bg_v1';
+  const applySidebarBg = (bg) => {
+    if (!bg) return;
+    document.documentElement.style.setProperty('--np-sidebar-bg', bg);
+    localStorage.setItem(SIDEBAR_THEME_KEY, bg);
+    document.querySelectorAll('#np-sidebar-themes .np-theme-dot').forEach((d) => {
+      d.classList.toggle('active', d.dataset.bg === bg);
+    });
+  };
+  applySidebarBg(localStorage.getItem(SIDEBAR_THEME_KEY) || '#f8fafc');
+  document.querySelectorAll('#np-sidebar-themes .np-theme-dot').forEach((dot) => {
+    dot.addEventListener('click', () => applySidebarBg(dot.dataset.bg));
+  });
   document.addEventListener('visibilitychange',()=>{if(document.hidden)persist().catch(report);else updateTrial().catch(report);});
   const rawTrial=await read(TRIAL_KEY);trial=trialState(parse(rawTrial,null),Date.now(),config.trialDays);await write(TRIAL_KEY,JSON.stringify(trial.record));
   library=parse(await read(LIBRARY_KEY),[]);if(!Array.isArray(library))library=[];

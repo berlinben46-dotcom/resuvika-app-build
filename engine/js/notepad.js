@@ -249,25 +249,22 @@ class ClassNotepad {
     document.getElementById('np-mode-keypad')?.addEventListener('click', () => this.setInputMode('keypad'));
     document.getElementById('np-mode-pen')?.addEventListener('click', () => this.setInputMode('pen'));
 
-    // Organizer Tabs (Classpads vs Reminders)
+    // Organizer Tabs (Folders vs To-Do vs Reminders)
     const orgTabNotes = document.getElementById('np-org-tab-notes');
+    const orgTabTodo = document.getElementById('np-org-tab-todo');
     const orgTabRem = document.getElementById('np-org-tab-reminders');
     const orgNotesPane = document.getElementById('np-org-notes-pane');
+    const orgTodoPane = document.getElementById('np-org-todo-pane');
     const orgRemPane = document.getElementById('np-org-reminders-pane');
 
-    orgTabNotes?.addEventListener('click', () => {
-      orgTabNotes.classList.add('active');
-      orgTabRem?.classList.remove('active');
-      orgNotesPane?.classList.remove('hidden');
-      orgRemPane?.classList.add('hidden');
-    });
+    const activateOrgTab = (tab, pane) => {
+      [orgTabNotes, orgTabTodo, orgTabRem].forEach(t => t?.classList.toggle('active', t === tab));
+      [orgNotesPane, orgTodoPane, orgRemPane].forEach(p => p?.classList.toggle('hidden', p !== pane));
+    };
 
-    orgTabRem?.addEventListener('click', () => {
-      orgTabRem.classList.add('active');
-      orgTabNotes?.classList.remove('active');
-      orgRemPane?.classList.remove('hidden');
-      orgNotesPane?.classList.add('hidden');
-    });
+    orgTabNotes?.addEventListener('click', () => activateOrgTab(orgTabNotes, orgNotesPane));
+    orgTabTodo?.addEventListener('click', () => activateOrgTab(orgTabTodo, orgTodoPane));
+    orgTabRem?.addEventListener('click', () => activateOrgTab(orgTabRem, orgRemPane));
 
     // Toggle Organizer Sidebar
     document.getElementById('np-toggle-org')?.addEventListener('click', () => {
@@ -389,6 +386,7 @@ class ClassNotepad {
             if (Number.isFinite(target) && target <= now) {
               rem.notified = true;
               changed = true;
+              if (window.showNativeReminderNow) window.showNativeReminderNow(rem);
               if (window.showToast) window.showToast(`⏰ Reminder: ${rem.title}`, 8000);
             }
           }
