@@ -45,9 +45,7 @@ public class FloatingOverlayPlugin extends Plugin {
     }
     @PluginMethod public void start(PluginCall call){
         if(!Settings.canDrawOverlays(getContext())){call.reject("First allow Display over other apps, then return here and tap Start floating tools.");return;}
-        if(getContext().getSharedPreferences("omniball_overlay",Context.MODE_PRIVATE).getLong("accessUntil",0)<=System.currentTimeMillis()){
-            call.reject("Open Full version to start your trial or restore your purchase.");return;
-        }
+        // All drawing tools are available free with ads; no trial block on overlay start.
         if(Build.VERSION.SDK_INT>=33&&getPermissionState("notifications")!=PermissionState.GRANTED){requestPermissionForAlias("notifications",call,"notificationResult");return;}
         launch(call);
     }

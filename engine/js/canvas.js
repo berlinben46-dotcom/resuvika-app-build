@@ -169,7 +169,13 @@ class DrawingCanvas {
   }
 
   onPointerDown(e) {
+    if (!this.isDrawing && !this.isPanning) {
+      this.activePointerId = null;
+    }
     if (e.pointerType === 'touch') {
+      if (e.isPrimary && !this.isPanning && !this.isDrawing) {
+        this.activeTouches.clear();
+      }
       this.activeTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
       // Two-finger pan: cancel any single-finger draft and start panning
       if (this.activeTouches.size >= 2) {
@@ -356,9 +362,9 @@ class DrawingCanvas {
     if (this.isPanning && (this.activeTool === 'pan' || this.activeTouches.size < 2)) {
       this.isPanning = false;
       this.panStart = null;
+      this.activePointerId = null;
       if (this.activeTool === 'pan') {
         try { this.drawCanvas.releasePointerCapture(e.pointerId); } catch (_) {}
-        this.activePointerId = null;
       }
       return;
     }

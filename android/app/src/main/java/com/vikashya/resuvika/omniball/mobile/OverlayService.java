@@ -30,7 +30,7 @@ public class OverlayService extends Service {
     private boolean drawing=false,recording=false,inkHidden=false;private int screenWidth,screenHeight,accent;private float density;
     private final Handler handler=new Handler(Looper.getMainLooper());private final Runnable saveTask=()->saveInk();
     private final ExecutorService storage=Executors.newSingleThreadExecutor();private final Object saveLock=new Object();private ArrayList<OverlayInkView.Mark> pendingSave;private boolean writerRunning=false;
-    private final Runnable accessTask=new Runnable(){public void run(){long now=System.currentTimeMillis(),last=prefs.getLong("overlayLastSeen",now);if(now>prefs.getLong("accessUntil",0)||now<last-300000||!Settings.canDrawOverlays(OverlayService.this)){toast("Open Omniball to refresh access or overlay permission.");stopSelf();return;}prefs.edit().putLong("overlayLastSeen",now).apply();handler.postDelayed(this,30000);}};
+    private final Runnable accessTask=new Runnable(){public void run(){if(!Settings.canDrawOverlays(OverlayService.this)){toast("Overlay permission was turned off.");stopSelf();return;}handler.postDelayed(this,30000);}};
     private static final LinkedHashMap<String,String> LABELS=new LinkedHashMap<>();
     private static final HashMap<String,String> PATHS=new HashMap<>();
     static{
@@ -42,7 +42,7 @@ public class OverlayService extends Service {
     private void toast(String message){Toast.makeText(this,message,Toast.LENGTH_LONG).show();}
     @Override public void onCreate(){
         super.onCreate();density=getResources().getDisplayMetrics().density;manager=(WindowManager)getSystemService(WINDOW_SERVICE);prefs=getSharedPreferences("omniball_overlay",MODE_PRIVATE);
-        if(!Settings.canDrawOverlays(this)||prefs.getLong("accessUntil",0)<=System.currentTimeMillis()){stopSelf();return;}
+        if(!Settings.canDrawOverlays(this)){stopSelf();return;}
         try{
             if(Build.VERSION.SDK_INT>=26){NotificationChannel channel=new NotificationChannel("omniball_overlay","Floating annotation",NotificationManager.IMPORTANCE_LOW);channel.setDescription("Controls for a floating drawing session you started.");getSystemService(NotificationManager.class).createNotificationChannel(channel);}
             if(Build.VERSION.SDK_INT>=34)startForeground(NOTICE,notification(),ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);else startForeground(NOTICE,notification());

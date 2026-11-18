@@ -166,46 +166,54 @@ async function exportPng(){
   await shareFile(`Resuvika-${stamp()}.png`,c.toDataURL('image/png').split(',')[1],'image/png',true);
 }
 function showPairing(){
-  const body=sheet('🛰️ Satellite Remote (Laptop & Smart TV)');
+  const body=sheet('📺 Smart TV & Laptop Pair');
   const sync = window.syncManager;
   if (sync?.isConnected) {
-    body.append(el('p', `Connected live to Laptop (${sync.hostInfo?.ip}:${sync.hostInfo?.port}). Anything you write or draw here appears on your laptop screen instantly!`, 'status'));
-    body.append(button('Disconnect Satellite Remote', () => { sync.disconnectSatellite(); closeSheet(); }));
+    body.append(el('p', `Connected live (Code: ${sync.hostInfo?.code || sync.myCode || 'Active'}). Everything you write or draw syncs instantly!`, 'status'));
+    body.append(button('Disconnect', () => { sync.disconnectSatellite(); closeSheet(); }));
     return;
   }
-  body.append(el('p','Connect wirelessly on the same Wi-Fi without any cables! On your laptop, click "Waiting for tablet" to see your Wi-Fi IP and 6-digit code.'));
-  let saved = {};
-  try { saved = JSON.parse(localStorage.getItem('resuvika_satellite_last') || '{}'); } catch {}
+  body.append(el('p','Zero IP address needed! Either enter the 6-digit code shown on your Smart TV / Laptop below, OR enter this device’s code on your TV / Laptop.'));
 
-  const ipLbl = el('label', 'Laptop Wi-Fi IP Address');
-  const ipIn = el('input'); ipIn.type = 'text'; ipIn.placeholder = 'e.g. 192.168.1.12'; ipIn.value = saved.ip || '';
-  ipLbl.append(ipIn);
+  const myCodeCard = document.createElement('div');
+  myCodeCard.style.cssText = 'background:#f1f5f9;border:1px solid #cbd5e1;border-radius:14px;padding:12px;text-align:center;margin:8px 0 14px;';
+  const codeTitle = el('div', 'THIS DEVICE’S 6-DIGIT CODE');
+  codeTitle.style.cssText = 'font-size:11px;font-weight:700;color:#64748b;letter-spacing:0.6px;margin-bottom:4px;';
+  const codeValue = el('div', sync?.myCode || '••••••');
+  codeValue.style.cssText = 'font-size:28px;font-weight:800;letter-spacing:6px;color:#0f172a;font-family:monospace;';
+  const hostStatus = el('div', 'Starting auto-pair listener…');
+  hostStatus.style.cssText = 'font-size:12px;color:#0284c7;margin-top:4px;';
+  myCodeCard.append(codeTitle, codeValue, hostStatus);
+  body.append(myCodeCard);
 
-  const portLbl = el('label', 'Port (default 8080)');
-  const portIn = el('input'); portIn.type = 'number'; portIn.value = saved.port || '8080';
-  portLbl.append(portIn);
+  if (sync?.hostWithMutualCode) {
+    sync.hostWithMutualCode().then((c) => {
+      codeValue.textContent = c;
+      hostStatus.textContent = 'Ready! Open TV / Laptop and type this code.';
+    }).catch(() => {
+      hostStatus.textContent = 'Check internet/Wi-Fi to host code.';
+    });
+  }
 
-  const pinLbl = el('label', '6-Digit Match Code');
-  const pinIn = el('input'); pinIn.type = 'number'; pinIn.placeholder = 'e.g. 482910';
+  const pinLbl = el('label', 'Or Enter 6-Digit Code from Smart TV / Laptop');
+  const pinIn = el('input');
+  pinIn.type = 'number';
+  pinIn.placeholder = 'e.g. 482910';
+  pinIn.maxLength = 6;
+  pinIn.style.cssText = 'font-size:20px;letter-spacing:4px;text-align:center;font-family:monospace;';
   pinLbl.append(pinIn);
 
   const statusMsg = el('p', '', 'status');
-  body.append(ipLbl, portLbl, pinLbl, button('🛰️ Connect as Satellite Remote', async () => {
-    statusMsg.textContent = 'Connecting to laptop…';
+  body.append(pinLbl, button('🔗 Pair with Code', async () => {
+    statusMsg.textContent = 'Pairing automatically…';
     try {
-      await sync.connectSatellite({ ip: ipIn.value, port: portIn.value, pin: pinIn.value });
+      await sync.connectByMutualCode(pinIn.value);
       closeSheet();
-      window.showToast?.('🛰️ Satellite Remote Connected! Draw or type here to control laptop live.', 4000);
+      window.showToast?.('📺 Paired live! Drawings sync automatically.', 4000);
     } catch (err) {
-      statusMsg.textContent = err.message || 'Could not connect. Check Wi-Fi & code.';
+      statusMsg.textContent = err.message || 'Could not pair. Check the 6-digit code.';
     }
   }, 'primary'), statusMsg);
-
-  body.append(el('h2', 'Or open in browser via QR link'));
-  const label=el('label','Full pairing link');const input=el('input');input.type='url';input.placeholder='http://192.168.…:8080/ipad.html?token=…';input.id='pairing-link';label.append(input);body.append(label,button('Open browser companion',async()=>{
-    const url=validatePairingLink(input.value);await persist();
-    if(native)await Browser.open({url});else window.open(url,'_blank','noopener');
-  }));
 }
 async function refreshCustomer(){
   if(!configured)return;
@@ -334,8 +342,13 @@ async function start(){
     for (const id of ['mob-tool-pen', 'mob-tool-pan', 'mob-tool-eraser']) {
       $(id)?.classList.toggle('active', id === activeId);
     }
-    if (window.drawingCanvas) {
-      window.drawingCanvas.activeTool = toolName;
+    const b = window.drawingCanvas;
+    if (b) {
+      b.isPanning = false;
+      b.isDrawing = false;
+      b.activePointerId = null;
+      b.activeTouches?.clear();
+      b.activeTool = toolName;
     }
   };
   $('mob-tool-pen')?.addEventListener('click', () => setActiveMobTool('mob-tool-pen', 'pen'));
