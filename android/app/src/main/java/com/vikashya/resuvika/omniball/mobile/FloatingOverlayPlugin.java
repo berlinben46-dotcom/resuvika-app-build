@@ -16,8 +16,20 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 
-@CapacitorPlugin(name="FloatingOverlay", permissions={@Permission(alias="notifications",strings={Manifest.permission.POST_NOTIFICATIONS})})
+@CapacitorPlugin(name="FloatingOverlay", permissions={
+    @Permission(alias="notifications",strings={Manifest.permission.POST_NOTIFICATIONS}),
+    @Permission(alias="mic",strings={Manifest.permission.RECORD_AUDIO})
+})
 public class FloatingOverlayPlugin extends Plugin {
+    @PluginMethod public void requestMic(PluginCall call){
+        if(getPermissionState("mic")==PermissionState.GRANTED){
+            JSObject r=new JSObject();r.put("granted",true);call.resolve(r);return;
+        }
+        requestPermissionForAlias("mic",call,"micCallback");
+    }
+    @PermissionCallback private void micCallback(PluginCall call){
+        JSObject r=new JSObject();r.put("granted",getPermissionState("mic")==PermissionState.GRANTED);call.resolve(r);
+    }
     @PluginMethod public void status(PluginCall call){
         JSObject result=new JSObject();result.put("allowed",Settings.canDrawOverlays(getContext()));result.put("running",OverlayService.running);result.put("androidVersion",Build.VERSION.RELEASE);call.resolve(result);
     }

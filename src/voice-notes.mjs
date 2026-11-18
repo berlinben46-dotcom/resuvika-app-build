@@ -2,6 +2,9 @@
  * Class Voice Notes recorder & player (IndexedDB-backed for offline reliability).
  */
 
+import { Capacitor } from '@capacitor/core';
+import { FloatingOverlay } from './shell.mjs';
+
 const DB_NAME = 'resuvika_voice_notes_db';
 const STORE_NAME = 'notes';
 
@@ -93,14 +96,26 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
   };
 
   async function startRecording() {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const perm = await FloatingOverlay.requestMic();
+        if (perm && perm.granted === false) {
+          toast?.('Please allow Microphone permission to record class voice notes.', 4000);
+          showVoiceNotes();
+          return false;
+        }
+      } catch (_) {}
+    }
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
       toast?.('Voice recording is not supported on this device.', 3500);
+      showVoiceNotes();
       return false;
     }
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch {
+    } catch (err) {
       toast?.('Microphone permission is needed to record class voice notes.', 4000);
+      showVoiceNotes();
       return false;
     }
 
@@ -132,7 +147,8 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
         blob
       };
       await saveNote(note);
-      toast?.(`🎙️ Saved ${note.title} (${formatDuration(durationSec)})! Open Menu → Class Voice Notes to play.`, 4000);
+      toast?.(`🎙️ Saved ${note.title} (${formatDuration(durationSec)})!`, 3500);
+      showVoiceNotes();
     };
 
     recorder.start(500);

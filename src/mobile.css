@@ -11,6 +11,8 @@ body.mobile-app { background:#fff; color:var(--mobile-ink); font-family:system-u
 .mobile-app #text-controls { bottom:calc(env(safe-area-inset-bottom) + 12px + var(--keyboard-lift,0px)); background:#fff; color:#16243a; border:1px solid #b6c4d7; max-width:calc(100vw - 24px); }
 .mobile-app #text-controls .text-help { display:none; }
 .mobile-app.menus-hidden:not(.recording-mode).mobile-text-tool #text-controls { display:flex!important; }
+.mobile-app.menus-hidden #floating-notepad:not(.hidden) { display:flex!important; z-index:1200; top:calc(env(safe-area-inset-top) + 56px); left:10px; right:10px; width:calc(100vw - 20px); max-height:calc(100dvh - 80px); }
+.mobile-app #floating-notepad.hidden { display:none!important; }
 .mobile-app .screen-text-editor { background:#fff; border-color:#9eb4d1; }
 .mobile-app button,.mobile-app input,.mobile-app textarea { font:inherit; }
 .mobile-app .tool-btn,.mobile-app .shape-opt,.mobile-app .icon-btn,.mobile-app .pill-btn,.mobile-app .fill-btn,.mobile-app .mode-btn { color:#243a55; border-color:#d7e0eb; }

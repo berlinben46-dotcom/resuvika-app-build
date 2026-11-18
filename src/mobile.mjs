@@ -174,7 +174,21 @@ function showPairing(){
     body.append(button('Disconnect', () => { sync.disconnectSatellite(); closeSheet(); }));
     return;
   }
-  body.append(el('p','Zero IP address needed! Either enter the 6-digit code shown on your Smart TV / Laptop below, OR enter this device’s code on your TV / Laptop.'));
+  body.append(el('p','1. On your Smart TV or Laptop browser, open: https://resuvika.com/tv (or open Resuvika Omniball on Laptop).\n2. Type this phone’s 6-digit code below — it connects automatically with zero IP address!'));
+
+  const tvUrlRow = document.createElement('div');
+  tvUrlRow.style.cssText = 'display:flex;gap:8px;align-items:center;margin:6px 0 10px;';
+  const tvUrlBtn = button('📋 Copy TV / Laptop Link (resuvika.com/tv)', async () => {
+    try {
+      await navigator.clipboard.writeText('https://resuvika.com/tv');
+      window.showToast?.('Link copied! Open it on your TV or Laptop browser.');
+    } catch {
+      window.showToast?.('Open https://resuvika.com/tv on your TV or Laptop.');
+    }
+  });
+  tvUrlBtn.style.cssText = 'width:100%;font-size:13px;';
+  tvUrlRow.append(tvUrlBtn);
+  body.append(tvUrlRow);
 
   const myCodeCard = document.createElement('div');
   myCodeCard.style.cssText = 'background:#f1f5f9;border:1px solid #cbd5e1;border-radius:14px;padding:12px;text-align:center;margin:8px 0 14px;';
@@ -337,6 +351,7 @@ async function start(){
   // Wire up simple top & bottom kid-friendly controls
   $('mob-btn-voice')?.addEventListener('click', () => voiceManager.toggleRecording().catch(report));
   $('mob-btn-notes')?.addEventListener('click', () => {
+    document.body.classList.remove('menus-hidden', 'tablet-tools-hidden');
     $('floating-notepad')?.classList.remove('hidden');
   });
   $('mob-btn-connect')?.addEventListener('click', () => showPairing());

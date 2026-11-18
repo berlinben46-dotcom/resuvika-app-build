@@ -212,7 +212,6 @@ class DrawingCanvas {
     }
 
     const pt = this.getPointerCoords(e);
-    if (pt.x < 0 || pt.y < 0 || pt.x > this.width || pt.y > this.height) return;
 
     // 1. ON-SCREEN TEXT TOOL: Click anywhere on screen to type directly!
     if (this.activeTool === 'text') {
