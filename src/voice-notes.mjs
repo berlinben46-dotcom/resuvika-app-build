@@ -1,11 +1,30 @@
 /**
- * Class Voice Notes recorder & player (Native Android MediaRecorder + IndexedDB offline storage).
+ * Class Voice Notes: Multi-language Voice-to-Text Dictation (Whiteboard & Notepad)
+ * + Offline Audio Recording (Native Android MediaRecorder + IndexedDB).
  */
 import { Capacitor } from '@capacitor/core';
 import { FloatingOverlay } from './shell.mjs';
 
 const DB_NAME = 'resuvika_voice_notes_db';
 const STORE_NAME = 'notes';
+const LANG_KEY = 'resuvika_dictate_lang_v1';
+const TARGET_KEY = 'resuvika_dictate_target_v1';
+
+const LANGUAGES = [
+  ['', 'Auto (Phone Language)'],
+  ['en-IN', 'English (India)'],
+  ['en-US', 'English (US)'],
+  ['hi-IN', 'हिन्दी (Hindi)'],
+  ['ta-IN', 'தமிழ் (Tamil)'],
+  ['te-IN', 'తెలుగు (Telugu)'],
+  ['bn-IN', 'বাংলা (Bengali)'],
+  ['mr-IN', 'मराठी (Marathi)'],
+  ['gu-IN', 'ગુજરાતી (Gujarati)'],
+  ['kn-IN', 'ಕನ್ನಡ (Kannada)'],
+  ['es-ES', 'Español (Spanish)'],
+  ['fr-FR', 'Français (French)'],
+  ['ar-SA', 'العربية (Arabic)']
+];
 
 function openDb() {
   return new Promise((resolve, reject) => {
@@ -80,7 +99,23 @@ function base64ToBlob(b64, mimeType) {
   return new Blob([bytes], { type: mimeType || 'audio/mp4' });
 }
 
-export function createVoiceNotesManager({ sheet, el, button, shareFile, toast }) {
+function wrapText(text, maxChars = 28) {
+  const words = String(text || '').trim().split(/\s+/);
+  const lines = [];
+  let line = '';
+  for (const w of words) {
+    if ((line + ' ' + w).trim().length > maxChars && line) {
+      lines.push(line);
+      line = w;
+    } else {
+      line = (line + ' ' + w).trim();
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+export function createVoiceNotesManager({ sheet, closeSheet, el, button, shareFile, toast }) {
   const isNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
   let nativeRecording = false;
   let recorder = null;
@@ -89,6 +124,7 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
   let startedAt = 0;
   let timerId = null;
   let needsMicSettings = false;
+  let lastDictatedText = '';
 
   const pill = () => document.getElementById('mob-btn-voice');
 
@@ -115,6 +151,86 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
       if (b) b.textContent = `🔴 ${formatDuration(elapsed)}`;
     }, 1000);
   };
+
+  function writeToWhiteboard(text) {
+    const clean = String(text || '').trim();
+    const board = window.drawingCanvas;
+    if (!clean || !board) return;
+    const fontSize = Math.max(18, Math.min(36, board.textFontSize || 24));
+    const lines = wrapText(clean, 26);
+    const startX = Math.round(Math.max(24, (board.width / 2 - 140) - (board.panX || 0)));
+    const startY = Math.round(Math.max(90, (board.height / 3) - (board.panY || 0)));
+    lines.forEach((line, idx) => {
+      board.addElement({
+        type: 'text',
+        x: startX,
+        y: startY + idx * Math.round(fontSize * 1.35),
+        text: line,
+        color: board.currentColor || '#0f172a',
+        fontSize
+      });
+    });
+    window.dispatchEvent(new Event('boardchanged'));
+    toast?.('✏️ Written onto Whiteboard!', 3000);
+  }
+
+  function writeToNotepad(text, openPad = true) {
+    const clean = String(text || '').trim();
+    const editor = document.getElementById('np-editor');
+    if (!clean || !editor) return;
+    const prefix = editor.value.trim() ? '\n' : '';
+    editor.value = `${editor.value}${prefix}${clean}`;
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    window.classNotepad?.saveToStorage?.();
+    if (openPad) {
+      closeSheet?.();
+      document.body.classList.remove('menus-hidden', 'tablet-tools-hidden');
+      document.getElementById('floating-notepad')?.classList.remove('hidden');
+    }
+    toast?.('📝 Added to Classpad Notes!', 3000);
+  }
+
+  async function dictateNow(forceTarget) {
+    const language = localStorage.getItem(LANG_KEY) || '';
+    const target = forceTarget || localStorage.getItem(TARGET_KEY) || 'whiteboard';
+
+    let spoken = '';
+    if (isNative) {
+      try {
+        const res = await FloatingOverlay.dictateSpeech({ language });
+        if (res?.cancelled) return '';
+        spoken = String(res?.text || '').trim();
+      } catch (err) {
+        toast?.(err?.message || 'Speech recognition is unavailable.', 4000);
+        return '';
+      }
+    } else {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        toast?.('Voice dictation is not supported in this browser.', 3500);
+        return '';
+      }
+      spoken = await new Promise((resolve) => {
+        const rec = new SR();
+        rec.lang = language || navigator.language || 'en-IN';
+        rec.interimResults = false;
+        rec.onresult = (e) => resolve(e.results?.[0]?.[0]?.transcript || '');
+        rec.onerror = () => resolve('');
+        rec.onend = () => resolve('');
+        rec.start();
+      });
+    }
+
+    if (!spoken) return '';
+    lastDictatedText = spoken;
+    if (target === 'notepad') {
+      writeToNotepad(spoken, true);
+    } else {
+      writeToWhiteboard(spoken);
+      showVoiceNotes();
+    }
+    return spoken;
+  }
 
   async function saveCapturedBlob(blob, durationSec, mimeType) {
     const now = new Date();
@@ -145,7 +261,7 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
         if (res?.started) {
           nativeRecording = true;
           startTimerUi();
-          toast?.('🎙️ Recording class voice note… Keep drawing or taking notes!', 3000);
+          toast?.('🎙️ Recording class audio… Tap 🔴 at top-right to stop & save.', 3000);
           return true;
         }
       } catch (err) {
@@ -156,7 +272,7 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
     }
 
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
-      toast?.('Voice recording is not supported on this device.', 3500);
+      toast?.('Audio recording is not supported on this device.', 3500);
       showVoiceNotes();
       return false;
     }
@@ -164,7 +280,7 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch {
       needsMicSettings = true;
-      toast?.('Microphone permission is needed to record class voice notes.', 4000);
+      toast?.('Microphone permission is needed to record audio.', 4000);
       showVoiceNotes();
       return false;
     }
@@ -190,7 +306,7 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
 
     recorder.start(500);
     startTimerUi();
-    toast?.('🎙️ Recording class voice note… Keep drawing or taking notes!', 3000);
+    toast?.('🎙️ Recording class audio… Tap 🔴 to stop.', 3000);
     return true;
   }
 
@@ -221,19 +337,82 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
     if (nativeRecording || (recorder && recorder.state !== 'inactive')) {
       return stopRecording();
     }
-    return startRecording();
+    return showVoiceNotes();
   }
 
   async function showVoiceNotes() {
-    const body = sheet('🎙️ Class Voice Notes');
+    const body = sheet('🎙️ Voice to Text & Audio');
     const isRec = nativeRecording || Boolean(recorder && recorder.state !== 'inactive');
+    const savedLang = localStorage.getItem(LANG_KEY) || '';
+    const savedTarget = localStorage.getItem(TARGET_KEY) || 'whiteboard';
 
+    // 1. Voice-to-Text Dictation (Any Language -> Whiteboard or Notepad)
+    body.append(el('h2', '🗣️ Speak to Write (Any Language)'));
+    const langSel = document.createElement('select');
+    langSel.style.cssText = 'width:100%;padding:11px;border:1px solid #b8c9de;border-radius:10px;background:#fff;color:#0f172a;margin:6px 0 10px;font-size:14px;';
+    for (const [code, name] of LANGUAGES) {
+      const opt = document.createElement('option');
+      opt.value = code;
+      opt.textContent = name;
+      if (code === savedLang) opt.selected = true;
+      langSel.append(opt);
+    }
+    langSel.onchange = () => localStorage.setItem(LANG_KEY, langSel.value);
+    body.append(langSel);
+
+    const targetRow = document.createElement('div');
+    targetRow.style.cssText = 'display:flex;gap:8px;margin-bottom:10px;';
+    const wbBtn = button('✏️ Write on Whiteboard', () => {
+      localStorage.setItem(TARGET_KEY, 'whiteboard');
+      wbBtn.className = 'primary';
+      npBtn.className = '';
+    }, savedTarget === 'whiteboard' ? 'primary' : undefined);
+    const npBtn = button('📝 Write in Notepad', () => {
+      localStorage.setItem(TARGET_KEY, 'notepad');
+      npBtn.className = 'primary';
+      wbBtn.className = '';
+    }, savedTarget === 'notepad' ? 'primary' : undefined);
+    wbBtn.style.flex = '1';
+    npBtn.style.flex = '1';
+    targetRow.append(wbBtn, npBtn);
+    body.append(targetRow);
+
+    const speakBtn = button('🗣️ Tap & Speak Now', async () => {
+      await dictateNow();
+    }, 'primary');
+    speakBtn.style.width = '100%';
+    body.append(speakBtn);
+
+    if (lastDictatedText) {
+      const previewBox = document.createElement('div');
+      previewBox.style.cssText = 'background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:10px;margin:10px 0;';
+      const txtArea = document.createElement('textarea');
+      txtArea.value = lastDictatedText;
+      txtArea.rows = 3;
+      txtArea.style.cssText = 'width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:8px;font-size:14px;background:#fff;color:#0f172a;box-sizing:border-box;';
+      txtArea.oninput = () => { lastDictatedText = txtArea.value; };
+      const moveRow = document.createElement('div');
+      moveRow.style.cssText = 'display:flex;gap:8px;margin-top:8px;';
+      const sendWb = button('✏️ Place on Whiteboard', () => { writeToWhiteboard(txtArea.value); closeSheet?.(); });
+      const moveNp = button('📝 Move to Notepad', () => writeToNotepad(txtArea.value, true));
+      sendWb.style.flex = '1';
+      moveNp.style.flex = '1';
+      moveRow.append(sendWb, moveNp);
+      previewBox.append(el('div', 'Last spoken text (edit or move):', 'muted'), txtArea, moveRow);
+      body.append(previewBox);
+    }
+
+    // 2. Audio Voice Note Recorder
+    body.append(el('h2', '🔴 Record Class Audio'));
     body.append(
-      el('p', 'Record lectures or quick explanations right while drawing on the board. Saved offline on this device.'),
-      button(isRec ? '⏹️ Stop Recording Now' : '🎙️ Start Recording Class Voice', async () => {
-        await toggleRecording();
-        if (!isRec) showVoiceNotes();
-      }, 'primary')
+      button(isRec ? '⏹️ Stop Audio Recording' : '🔴 Record Audio Clip', async () => {
+        if (isRec) {
+          await stopRecording();
+        } else {
+          const started = await startRecording();
+          if (started) closeSheet?.();
+        }
+      })
     );
 
     if (needsMicSettings && isNative) {
@@ -244,10 +423,10 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
       );
     }
 
-    body.append(el('h2', 'Saved Recordings'));
+    body.append(el('h2', 'Saved Audio Clips'));
     const notes = await listNotes();
     if (!notes.length) {
-      body.append(el('p', 'No voice notes yet. Tap 🎙️ Voice at the top right anytime during class!', 'muted'));
+      body.append(el('p', 'No audio clips yet.', 'muted'));
       return;
     }
 
@@ -286,5 +465,5 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
     }
   }
 
-  return { toggleRecording, showVoiceNotes };
+  return { toggleRecording, showVoiceNotes, dictateNow };
 }

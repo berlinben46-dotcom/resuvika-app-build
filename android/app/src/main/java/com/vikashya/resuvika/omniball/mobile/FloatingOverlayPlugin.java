@@ -12,9 +12,12 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.PermissionState;
+import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
+import androidx.activity.result.ActivityResult;
+import android.speech.RecognizerIntent;
 
 @CapacitorPlugin(name="FloatingOverlay", permissions={
     @Permission(alias="notifications",strings={Manifest.permission.POST_NOTIFICATIONS}),
@@ -186,6 +189,30 @@ public class FloatingOverlayPlugin extends Plugin {
         String json=call.getString("json","");
         LocalTvServer.updateBoard(json);
         call.resolve();
+    }
+
+    @PluginMethod public void dictateSpeech(PluginCall call){
+        String lang=call.getString("language","");
+        Intent intent=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        if(lang!=null&&!lang.isEmpty())intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,lang);
+        else intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,java.util.Locale.getDefault().toLanguageTag());
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT,"Speak in any language to write...");
+        try{
+            startActivityForResult(call,intent,"speechResult");
+        }catch(Exception e){
+            call.reject("Speech-to-text is not available on this device. Install Google app / Speech Services.");
+        }
+    }
+    @ActivityCallback private void speechResult(PluginCall call, ActivityResult result){
+        if(call==null)return;
+        if(result.getResultCode()==android.app.Activity.RESULT_OK&&result.getData()!=null){
+            java.util.ArrayList<String> matches=result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            String text=(matches!=null&&!matches.isEmpty())?matches.get(0):"";
+            JSObject r=new JSObject();r.put("text",text);call.resolve(r);
+        }else{
+            JSObject r=new JSObject();r.put("text","");r.put("cancelled",true);call.resolve(r);
+        }
     }
     private static class DateLimit{static final double MAX=4102444800000.0;}
 }

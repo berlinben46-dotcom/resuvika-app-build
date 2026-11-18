@@ -389,11 +389,12 @@ async function start(){
       }
     });
   }
-  const voiceManager = createVoiceNotesManager({ sheet, el, button, shareFile, toast: window.showToast });
+  const voiceManager = createVoiceNotesManager({ sheet, closeSheet, el, button, shareFile, toast: window.showToast });
   window.mobileShell=initMobileShell({canEdit:window.mobileCanEdit,paywall:openPaywall,boards:showLibrary,pairing:showPairing,voiceNotes:voiceManager.showVoiceNotes,sheet,closeSheet,persist,fitCanvas:fitCanvasToScreen,syncAccess:syncOverlayAccess,toast:window.showToast,report});
 
   // Wire up simple top & bottom kid-friendly controls
   $('mob-btn-voice')?.addEventListener('click', () => voiceManager.toggleRecording().catch(report));
+  $('np-dictate-btn')?.addEventListener('click', () => voiceManager.dictateNow('notepad').catch(report));
   $('mob-btn-notes')?.addEventListener('click', () => {
     document.body.classList.remove('menus-hidden', 'tablet-tools-hidden');
     $('floating-notepad')?.classList.remove('hidden');
