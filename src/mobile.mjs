@@ -167,7 +167,7 @@ async function exportPng(){
   await shareFile(`Resuvika-${stamp()}.png`,c.toDataURL('image/png').split(',')[1],'image/png',true);
 }
 function showPairing(){
-  const body=sheet('📺 Smart TV & Laptop Pair');
+  const body=sheet('Connect Laptop & Smart TV');
   const sync = window.syncManager;
   if (sync?.isConnected) {
     body.append(el('p', `Connected live (Code: ${sync.hostInfo?.code || sync.myCode || 'Active'}). Everything you write or draw syncs instantly!`, 'status'));
@@ -175,25 +175,60 @@ function showPairing(){
     return;
   }
 
-  body.append(el('p','Connect wirelessly on the SAME Wi-Fi or hotspot with zero internet domain needed:'));
-
   if (native && platform === 'android') {
+    body.append(el('h2', '1. Bluetooth Direct (Phone ↔ Laptop)'));
+    const btCard = document.createElement('div');
+    btCard.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin:6px 0 12px;';
+    const btStatus = el('p', 'Checking paired Bluetooth laptops…', 'muted');
+    btStatus.style.margin = '0 0 8px';
+    const btList = document.createElement('div');
+    btList.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+    btCard.append(btStatus, btList, button('Bluetooth Settings (Pair Laptop)', async () => {
+      try { await FloatingOverlay.openBluetoothSettings(); } catch {}
+    }));
+    body.append(btCard);
+
+    FloatingOverlay.getBluetoothDevices().then((res) => {
+      if (res?.connected) {
+        btStatus.textContent = `Connected via Bluetooth to ${res.connectedName || 'Laptop'}`;
+      } else if (res?.devices?.length) {
+        btStatus.textContent = 'Tap your paired Laptop to connect over Bluetooth:';
+        for (const dev of res.devices) {
+          const btn = button(`Connect to ${dev.name}`, async () => {
+            btStatus.textContent = `Connecting to ${dev.name}…`;
+            try {
+              await FloatingOverlay.connectBluetooth({ address: dev.address });
+              btStatus.textContent = `Connected to ${dev.name} over Bluetooth!`;
+              window.showToast?.(`Bluetooth connected to ${dev.name}!`);
+            } catch (err) {
+              btStatus.textContent = err?.message || 'Pair & open Laptop receiver first.';
+            }
+          }, 'primary');
+          btn.style.width = '100%';
+          btList.append(btn);
+        }
+      } else {
+        btStatus.textContent = 'No paired Bluetooth laptop found. Pair your Laptop in Bluetooth Settings first.';
+      }
+    }).catch((err) => {
+      btStatus.textContent = err?.message || 'Enable Bluetooth & Nearby Devices permission.';
+    });
+
+    body.append(el('h2', '2. Same Wi-Fi Display (Any TV or Laptop Browser)'));
     const wifiBox = document.createElement('div');
-    wifiBox.style.cssText = 'background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:12px;margin:8px 0 12px;text-align:center;';
-    const wifiTitle = el('div', 'SAME WI-FI LIVE TV / LAPTOP DISPLAY');
-    wifiTitle.style.cssText = 'font-size:11px;font-weight:700;color:#1d4ed8;letter-spacing:0.6px;margin-bottom:4px;';
+    wifiBox.style.cssText = 'background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:12px;margin:6px 0 12px;text-align:center;';
     const wifiUrlEl = el('div', 'Starting Wi-Fi display…');
-    wifiUrlEl.style.cssText = 'font-size:16px;font-weight:800;color:#0f172a;font-family:monospace;word-break:break-all;margin-bottom:8px;';
+    wifiUrlEl.style.cssText = 'font-size:16px;font-weight:800;color:#0f172a;font-family:monospace;word-break:break-all;margin-bottom:6px;';
     const wifiHint = el('div', 'Open this address in your Smart TV or Laptop browser on the same Wi-Fi.');
     wifiHint.style.cssText = 'font-size:12px;color:#475569;margin-bottom:8px;';
-    const copyWifiBtn = button('📋 Copy Same Wi-Fi Address', async () => {
+    const copyWifiBtn = button('Copy Same Wi-Fi Address', async () => {
       const txt = wifiUrlEl.textContent;
       if (txt.startsWith('http')) {
         try { await navigator.clipboard.writeText(txt); window.showToast?.('Wi-Fi address copied!'); } catch {}
       }
     });
     copyWifiBtn.style.cssText = 'width:100%;font-size:13px;';
-    wifiBox.append(wifiTitle, wifiUrlEl, wifiHint, copyWifiBtn);
+    wifiBox.append(wifiUrlEl, wifiHint, copyWifiBtn);
     body.append(wifiBox);
 
     FloatingOverlay.startTvServer().then((info) => {
@@ -208,18 +243,18 @@ function showPairing(){
       }
     }).catch(() => { wifiUrlEl.textContent = 'Wi-Fi server unavailable'; });
 
-    const castBtn = button('📺 Cast Full Screen to Smart TV (Smart View)', async () => {
+    const castBtn = button('Cast Screen to Smart TV (Smart View)', async () => {
       try {
         await FloatingOverlay.openCastSettings();
       } catch (err) {
         window.showToast?.(err?.message || 'Swipe down Quick Settings and tap Smart View / Cast.', 4000);
       }
-    }, 'primary');
+    });
     castBtn.style.cssText = 'width:100%;margin-bottom:12px;';
     body.append(castBtn);
   }
 
-  body.append(el('p','Or open Resuvika Omniball on a 2nd device / Laptop App and pair with this 6-digit code:', 'muted'));
+  body.append(el('h2', '3. 6-Digit Code (2nd Resuvika App)'));
 
   const myCodeCard = document.createElement('div');
   myCodeCard.style.cssText = 'background:#f1f5f9;border:1px solid #cbd5e1;border-radius:14px;padding:12px;text-align:center;margin:8px 0 14px;';

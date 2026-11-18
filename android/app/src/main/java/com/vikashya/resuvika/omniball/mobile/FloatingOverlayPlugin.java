@@ -21,7 +21,8 @@ import android.speech.RecognizerIntent;
 
 @CapacitorPlugin(name="FloatingOverlay", permissions={
     @Permission(alias="notifications",strings={Manifest.permission.POST_NOTIFICATIONS}),
-    @Permission(alias="mic",strings={Manifest.permission.RECORD_AUDIO})
+    @Permission(alias="mic",strings={Manifest.permission.RECORD_AUDIO}),
+    @Permission(alias="bluetooth",strings={Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.BLUETOOTH_SCAN})
 })
 public class FloatingOverlayPlugin extends Plugin {
     @PluginMethod public void requestMic(PluginCall call){
@@ -188,7 +189,52 @@ public class FloatingOverlayPlugin extends Plugin {
     @PluginMethod public void updateTvBoard(PluginCall call){
         String json=call.getString("json","");
         LocalTvServer.updateBoard(json);
+        BluetoothSyncManager.sendBoard(json);
         call.resolve();
+    }
+
+    @PluginMethod public void getBluetoothDevices(PluginCall call){
+        if(Build.VERSION.SDK_INT>=31&&getPermissionState("bluetooth")!=PermissionState.GRANTED){
+            requestPermissionForAlias("bluetooth",call,"btDevicesAfterPerm");
+            return;
+        }
+        resolveBtDevices(call);
+    }
+    @PermissionCallback private void btDevicesAfterPerm(PluginCall call){
+        if(Build.VERSION.SDK_INT>=31&&getPermissionState("bluetooth")!=PermissionState.GRANTED){
+            call.reject("Allow Nearby Devices / Bluetooth permission to connect to your Laptop.");return;
+        }
+        resolveBtDevices(call);
+    }
+    private void resolveBtDevices(PluginCall call){
+        BluetoothSyncManager.startServer();
+        com.getcapacitor.JSArray arr=new com.getcapacitor.JSArray();
+        for(java.util.Map<String,String> d:BluetoothSyncManager.getPairedDevices(getContext())){
+            JSObject o=new JSObject();o.put("name",d.get("name"));o.put("address",d.get("address"));arr.put(o);
+        }
+        JSObject r=new JSObject();
+        r.put("devices",arr);
+        r.put("connected",BluetoothSyncManager.isConnected());
+        r.put("connectedName",BluetoothSyncManager.getConnectedName());
+        call.resolve(r);
+    }
+    @PluginMethod public void connectBluetooth(PluginCall call){
+        String addr=call.getString("address","");
+        if(addr==null||addr.isEmpty()){call.reject("Select a paired Laptop first.");return;}
+        new Thread(()->{
+            try{
+                BluetoothSyncManager.connect(addr);
+                JSObject r=new JSObject();r.put("connected",true);r.put("name",BluetoothSyncManager.getConnectedName());call.resolve(r);
+            }catch(Exception e){
+                call.reject("Could not connect over Bluetooth: "+e.getMessage()+". Make sure your Laptop is paired and listening.");
+            }
+        }).start();
+    }
+    @PluginMethod public void openBluetoothSettings(PluginCall call){
+        getActivity().runOnUiThread(()->{
+            try{getActivity().startActivity(new Intent(Settings.ACTION_BLUETOOTH_SETTINGS));call.resolve();}
+            catch(Exception e){call.reject("Open Android Settings > Bluetooth to pair your Laptop.");}
+        });
     }
 
     @PluginMethod public void dictateSpeech(PluginCall call){
