@@ -459,12 +459,45 @@ async function start(){
   $('btn-prev-page')?.addEventListener('click', () => window.drawingCanvas?.prevPage());
   $('btn-next-page')?.addEventListener('click', () => window.drawingCanvas?.nextPage());
   $('btn-add-page')?.addEventListener('click', () => window.drawingCanvas?.addNewPage());
+
+  // Quick color dots & paper toggle
+  document.querySelectorAll('.mob-ink-dot').forEach((dot) => {
+    dot.addEventListener('click', () => {
+      const color = dot.dataset.color;
+      if (!color || !window.drawingCanvas) return;
+      window.drawingCanvas.currentColor = color;
+      window.toolPreferences?.save?.();
+      document.querySelectorAll('.mob-ink-dot').forEach((d) => d.classList.toggle('active', d === dot));
+      setActiveMobTool('mob-tool-pen', 'pen');
+    });
+  });
+  const paperModes = ['whiteboard', 'grid', 'blackboard'];
+  const paperLabels = { whiteboard: 'Grid', grid: 'Dark', blackboard: 'White' };
+  $('mob-paper-toggle')?.addEventListener('click', () => {
+    const b = window.drawingCanvas;
+    if (!b) return;
+    const nextIdx = (paperModes.indexOf(b.currentBackground) + 1) % paperModes.length;
+    const nextBg = paperModes[nextIdx];
+    b.setBackground(nextBg);
+    const btn = $('mob-paper-toggle');
+    if (btn) {
+      btn.textContent = paperLabels[nextBg] || 'Paper';
+      btn.classList.toggle('active', nextBg !== 'whiteboard');
+    }
+    window.dispatchEvent(new Event('boardchanged'));
+  });
+
   window.drawingCanvas?.updatePageIndicator?.();
   window.addEventListener('resize',()=>{const board=window.drawingCanvas;if(!board.elements.length&&!board.clearUndo?.length&&!board.isDrawing&&!['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)){board.setBoardSize(window.innerWidth,window.innerHeight);queueSave();}});
   try{await configurePurchases();}catch{window.showToast('Could not connect to purchases. You can retry from Full version.',5000);}
   if(native){
     await App.addListener('appStateChange',run(async state=>{if(!state.isActive)await persist();else{await updateTrial();await refreshCustomer();}}));
-    await App.addListener('backButton',()=>{if(!$('mobile-dialog').hidden)closeSheet();else if(document.body.classList.contains('recording-mode'))window.restoreControls();else if(!$('omni-palette').hidden)window.mobileShell.close();else window.mobileShell.showMore();});
+    await App.addListener('backButton',()=>{
+      if(!$('mobile-dialog').hidden){closeSheet();return;}
+      if($('floating-notepad') && !$('floating-notepad').classList.contains('hidden')){$('floating-notepad').classList.add('hidden');document.body.classList.add('menus-hidden');return;}
+      if(document.body.classList.contains('recording-mode')){window.restoreControls();return;}
+      if(!$('omni-palette').hidden){window.mobileShell.close();return;}
+    });
   }
   setInterval(()=>{updateTrial().catch(report);},60000);
   await persist();

@@ -70,9 +70,21 @@ public class BluetoothSyncManager {
         if (adapter == null) throw new IOException("Bluetooth is not available on this device.");
         if (!adapter.isEnabled()) throw new IOException("Turn on Bluetooth first.");
         BluetoothDevice device = adapter.getRemoteDevice(address);
-        BluetoothSocket socket = device.createRfcommSocketToServiceRecord(SPP_UUID);
         adapter.cancelDiscovery();
-        socket.connect();
+        BluetoothSocket socket = null;
+        try {
+            socket = device.createRfcommSocketToServiceRecord(SPP_UUID);
+            socket.connect();
+        } catch (IOException primaryErr) {
+            try { if (socket != null) socket.close(); } catch (Exception ignored) {}
+            try {
+                socket = device.createInsecureRfcommSocketToServiceRecord(SPP_UUID);
+                socket.connect();
+            } catch (IOException fallbackErr) {
+                try { if (socket != null) socket.close(); } catch (Exception ignored) {}
+                throw new IOException("Laptop receiver not listening over Bluetooth yet. Use Same Wi-Fi Display below for instant browser mirror.");
+            }
+        }
         setSocket(socket, device.getName() != null ? device.getName() : address);
     }
 

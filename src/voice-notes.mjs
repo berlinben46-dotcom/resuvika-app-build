@@ -157,19 +157,35 @@ export function createVoiceNotesManager({ sheet, closeSheet, el, button, shareFi
     const board = window.drawingCanvas;
     if (!clean || !board) return;
     const fontSize = Math.max(18, Math.min(36, board.textFontSize || 24));
+    const lineHeight = Math.round(fontSize * 1.45);
     const lines = wrapText(clean, 26);
     const startX = Math.round(Math.max(24, (board.width / 2 - 140) - (board.panX || 0)));
-    const startY = Math.round(Math.max(90, (board.height / 3) - (board.panY || 0)));
+
+    // Always place new dictated text BELOW the lowest existing text element so lines never overlap
+    const textEls = (board.elements || []).filter((e) => e.type === 'text' && Number.isFinite(e.y));
+    const maxExistingY = textEls.length ? Math.max(...textEls.map((e) => e.y)) : 0;
+    const defaultTopY = Math.round(Math.max(100, (board.height / 4) - (board.panY || 0)));
+    const startY = maxExistingY > 0 ? Math.max(defaultTopY, maxExistingY + lineHeight + 8) : defaultTopY;
+
     lines.forEach((line, idx) => {
       board.addElement({
         type: 'text',
         x: startX,
-        y: startY + idx * Math.round(fontSize * 1.35),
+        y: startY + idx * lineHeight,
         text: line,
         color: board.currentColor || '#0f172a',
         fontSize
       });
     });
+
+    // Auto-scroll down if the new text goes near the bottom of the screen
+    const lastY = startY + (lines.length - 1) * lineHeight;
+    const screenY = lastY + (board.panY || 0);
+    if (screenY > board.height - 170) {
+      board.panY = (board.panY || 0) - (screenY - (board.height - 200));
+      board.applyViewportTransform?.();
+    }
+
     window.dispatchEvent(new Event('boardchanged'));
     toast?.('✏️ Written onto Whiteboard!', 3000);
   }

@@ -186,7 +186,64 @@ body.mobile-app { background:#fff; color:var(--mobile-ink); font-family:system-u
   display: none !important;
 }
 
-/* 3. Pro Floating Bottom Dock (GoodNotes / Apple Freeform Style) */
+/* 3. Pro Floating Color Strip & Bottom Dock */
+.mob-color-strip {
+  position: fixed;
+  bottom: calc(106px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 129;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 999px;
+  padding: 6px 12px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+}
+body.pro-unlocked .mob-color-strip {
+  bottom: calc(76px + env(safe-area-inset-bottom));
+}
+.recording-mode .mob-color-strip { display: none !important; }
+.mob-ink-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.16);
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.mob-ink-dot.active {
+  transform: scale(1.18);
+  box-shadow: 0 0 0 2.5px #2563eb;
+}
+.mob-strip-div {
+  width: 1px;
+  height: 16px;
+  background: #e2e8f0;
+  margin: 0 2px;
+}
+.mob-paper-btn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.mob-paper-btn.active {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+/* Pro Floating Bottom Dock (GoodNotes / Apple Freeform Style) */
 .mobile-bottom-bar {
   position: fixed;
   bottom: calc(44px + env(safe-area-inset-bottom));
