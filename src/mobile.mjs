@@ -176,45 +176,7 @@ function showPairing(){
   }
 
   if (native && platform === 'android') {
-    body.append(el('h2', '1. Bluetooth Direct (Phone ↔ Laptop)'));
-    const btCard = document.createElement('div');
-    btCard.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px;margin:6px 0 12px;';
-    const btStatus = el('p', 'Checking paired Bluetooth laptops…', 'muted');
-    btStatus.style.margin = '0 0 8px';
-    const btList = document.createElement('div');
-    btList.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
-    btCard.append(btStatus, btList, button('Bluetooth Settings (Pair Laptop)', async () => {
-      try { await FloatingOverlay.openBluetoothSettings(); } catch {}
-    }));
-    body.append(btCard);
-
-    FloatingOverlay.getBluetoothDevices().then((res) => {
-      if (res?.connected) {
-        btStatus.textContent = `Connected via Bluetooth to ${res.connectedName || 'Laptop'}`;
-      } else if (res?.devices?.length) {
-        btStatus.textContent = 'Tap your paired Laptop to connect over Bluetooth:';
-        for (const dev of res.devices) {
-          const btn = button(`Connect to ${dev.name}`, async () => {
-            btStatus.textContent = `Connecting to ${dev.name}…`;
-            try {
-              await FloatingOverlay.connectBluetooth({ address: dev.address });
-              btStatus.textContent = `Connected to ${dev.name} over Bluetooth!`;
-              window.showToast?.(`Bluetooth connected to ${dev.name}!`);
-            } catch (err) {
-              btStatus.textContent = err?.message || 'Pair & open Laptop receiver first.';
-            }
-          }, 'primary');
-          btn.style.width = '100%';
-          btList.append(btn);
-        }
-      } else {
-        btStatus.textContent = 'No paired Bluetooth laptop found. Pair your Laptop in Bluetooth Settings first.';
-      }
-    }).catch((err) => {
-      btStatus.textContent = err?.message || 'Enable Bluetooth & Nearby Devices permission.';
-    });
-
-    body.append(el('h2', '2. Same Wi-Fi Display (Any TV or Laptop Browser)'));
+    body.append(el('h2', '1. Same Wi-Fi Display (Any TV or Laptop Browser)'));
     const wifiBox = document.createElement('div');
     wifiBox.style.cssText = 'background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:12px;margin:6px 0 12px;text-align:center;';
     const wifiUrlEl = el('div', 'Starting Wi-Fi display…');
@@ -485,6 +447,42 @@ async function start(){
       btn.classList.toggle('active', nextBg !== 'whiteboard');
     }
     window.dispatchEvent(new Event('boardchanged'));
+  });
+
+  // Insert Photo / Diagram onto Whiteboard for annotation
+  $('mob-photo-btn')?.addEventListener('click', () => $('mob-photo-input')?.click());
+  $('mob-photo-input')?.addEventListener('change', (ev) => {
+    const file = ev.target?.files?.[0];
+    if (!file || !window.drawingCanvas) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const b = window.drawingCanvas;
+        const maxW = Math.min(b.width - 32, 680);
+        const scale = Math.min(1, maxW / img.width);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const c = document.createElement('canvas');
+        c.width = w;
+        c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        const src = c.toDataURL('image/jpeg', 0.85);
+        b.addElement({
+          type: 'image',
+          x: Math.round((b.width - w) / 2 - (b.panX || 0)),
+          y: Math.round(90 - (b.panY || 0)),
+          width: w,
+          height: h,
+          src
+        });
+        window.dispatchEvent(new Event('boardchanged'));
+        window.showToast?.('Photo added! Use Pen to draw or highlight over it.');
+      };
+      img.src = String(reader.result || '');
+    };
+    reader.readAsDataURL(file);
+    ev.target.value = '';
   });
 
   window.drawingCanvas?.updatePageIndicator?.();

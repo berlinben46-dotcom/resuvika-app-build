@@ -98,6 +98,19 @@
     </button>
   </div>
 
+  <!-- Quick Ink Color, Paper & Photo Strip -->
+  <div id="mob-color-strip" class="mob-color-strip" aria-label="Quick ink colors, paper and photo">
+    <button type="button" class="mob-ink-dot active" data-color="#ef4444" style="background:#ef4444" title="Red Ink"></button>
+    <button type="button" class="mob-ink-dot" data-color="#2563eb" style="background:#2563eb" title="Blue Ink"></button>
+    <button type="button" class="mob-ink-dot" data-color="#0f172a" style="background:#0f172a" title="Black Ink"></button>
+    <button type="button" class="mob-ink-dot" data-color="#059669" style="background:#059669" title="Green Ink"></button>
+    <button type="button" class="mob-ink-dot" data-color="#f59e0b" style="background:#f59e0b" title="Gold Ink"></button>
+    <span class="mob-strip-div"></span>
+    <button type="button" class="mob-paper-btn" id="mob-paper-toggle" title="Switch Paper (White / Grid / Dark)">Grid</button>
+    <button type="button" class="mob-paper-btn" id="mob-photo-btn" title="Insert Photo or Diagram to Annotate">Photo</button>
+    <input type="file" id="mob-photo-input" accept="image/*" style="display:none">
+  </div>
+
   <!-- Pro Floating Bottom Dock (Pen, Scroll, Erase, Undo, Multi-Page) -->
   <nav id="mobile-bottom-bar" class="mobile-bottom-bar" aria-label="Quick drawing and page controls">
     <button type="button" class="mob-bar-btn active" id="mob-tool-pen" title="Draw / Write">
