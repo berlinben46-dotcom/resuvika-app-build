@@ -40,7 +40,7 @@ jobs:
         run: |
           test -n "$KEYSTORE_BASE64"
           printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload.jks"
-      - name: Build signed Play app bundle
+      - name: Build signed Play app bundle and release APK
         if: inputs.release
         working-directory: android
         env:
@@ -48,7 +48,7 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: bash ./gradlew :app:bundleRelease --no-daemon
+        run: bash ./gradlew :app:bundleRelease :app:assembleRelease --no-daemon
       - name: Build preview APK
         if: ${{ !inputs.release }}
         working-directory: android
@@ -58,6 +58,7 @@ jobs:
           name: Resuvika-Omniball-Android-${{ inputs.release && 'Play-AAB' || 'Preview-APK' }}
           path: |
             android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/release/*.apk
             android/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
           retention-days: 14
