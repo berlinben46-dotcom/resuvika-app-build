@@ -166,7 +166,7 @@ async function exportPng(){
   await shareFile(`Resuvika-${stamp()}.png`,c.toDataURL('image/png').split(',')[1],'image/png',true);
 }
 function showPairing(){
-  const body=sheet('🛰️ Satellite Remote Control');
+  const body=sheet('🛰️ Satellite Remote (Laptop & Smart TV)');
   const sync = window.syncManager;
   if (sync?.isConnected) {
     body.append(el('p', `Connected live to Laptop (${sync.hostInfo?.ip}:${sync.hostInfo?.port}). Anything you write or draw here appears on your laptop screen instantly!`, 'status'));
