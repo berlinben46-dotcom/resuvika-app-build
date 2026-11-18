@@ -174,21 +174,52 @@ function showPairing(){
     body.append(button('Disconnect', () => { sync.disconnectSatellite(); closeSheet(); }));
     return;
   }
-  body.append(el('p','Connect wirelessly to your Smart TV or Laptop with zero IP address and no website needed:'));
+
+  body.append(el('p','Connect wirelessly on the SAME Wi-Fi or hotspot with zero internet domain needed:'));
 
   if (native && platform === 'android') {
-    const castBtn = button('📺 Cast Screen to Smart TV (Wireless / Smart View)', async () => {
+    const wifiBox = document.createElement('div');
+    wifiBox.style.cssText = 'background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:12px;margin:8px 0 12px;text-align:center;';
+    const wifiTitle = el('div', 'SAME WI-FI LIVE TV / LAPTOP DISPLAY');
+    wifiTitle.style.cssText = 'font-size:11px;font-weight:700;color:#1d4ed8;letter-spacing:0.6px;margin-bottom:4px;';
+    const wifiUrlEl = el('div', 'Starting Wi-Fi display…');
+    wifiUrlEl.style.cssText = 'font-size:16px;font-weight:800;color:#0f172a;font-family:monospace;word-break:break-all;margin-bottom:8px;';
+    const wifiHint = el('div', 'Open this address in your Smart TV or Laptop browser on the same Wi-Fi.');
+    wifiHint.style.cssText = 'font-size:12px;color:#475569;margin-bottom:8px;';
+    const copyWifiBtn = button('📋 Copy Same Wi-Fi Address', async () => {
+      const txt = wifiUrlEl.textContent;
+      if (txt.startsWith('http')) {
+        try { await navigator.clipboard.writeText(txt); window.showToast?.('Wi-Fi address copied!'); } catch {}
+      }
+    });
+    copyWifiBtn.style.cssText = 'width:100%;font-size:13px;';
+    wifiBox.append(wifiTitle, wifiUrlEl, wifiHint, copyWifiBtn);
+    body.append(wifiBox);
+
+    FloatingOverlay.startTvServer().then((info) => {
+      if (info?.url) {
+        wifiUrlEl.textContent = info.url;
+        const board = window.drawingCanvas;
+        if (board) {
+          FloatingOverlay.updateTvBoard({ json: JSON.stringify({ elements: board.elements, background: board.currentBackground, width: board.width, height: board.height }) }).catch(() => {});
+        }
+      } else {
+        wifiUrlEl.textContent = 'Connect to Wi-Fi or Hotspot first';
+      }
+    }).catch(() => { wifiUrlEl.textContent = 'Wi-Fi server unavailable'; });
+
+    const castBtn = button('📺 Cast Full Screen to Smart TV (Smart View)', async () => {
       try {
         await FloatingOverlay.openCastSettings();
       } catch (err) {
         window.showToast?.(err?.message || 'Swipe down Quick Settings and tap Smart View / Cast.', 4000);
       }
     }, 'primary');
-    castBtn.style.cssText = 'width:100%;margin-bottom:10px;';
+    castBtn.style.cssText = 'width:100%;margin-bottom:12px;';
     body.append(castBtn);
   }
 
-  body.append(el('p','Or open Resuvika Omniball on your Laptop / 2nd device and pair with this 6-digit code:', 'muted'));
+  body.append(el('p','Or open Resuvika Omniball on a 2nd device / Laptop App and pair with this 6-digit code:', 'muted'));
 
   const myCodeCard = document.createElement('div');
   myCodeCard.style.cssText = 'background:#f1f5f9;border:1px solid #cbd5e1;border-radius:14px;padding:12px;text-align:center;margin:8px 0 14px;';
@@ -323,7 +354,20 @@ async function start(){
     if(ready&&!window.mobileCanEdit()&&event.target.closest('#btn-clear,#btn-undo,#btn-redo,#np-stamp-to-canvas,#np-add-tab,.mode-btn')){event.stopImmediatePropagation();event.preventDefault();openPaywall();}
   },true);
   document.addEventListener('dblclick',event=>{if(!window.mobileCanEdit()&&event.target.closest('.np-tab')){event.stopImmediatePropagation();event.preventDefault();openPaywall();}},true);
-  window.addEventListener('boardchanged',queueSave);
+  window.addEventListener('boardchanged', () => {
+    queueSave();
+    if (native && platform === 'android' && window.drawingCanvas) {
+      const b = window.drawingCanvas;
+      FloatingOverlay.updateTvBoard({ json: JSON.stringify({ elements: b.elements, background: b.currentBackground, width: b.width, height: b.height }) }).catch(() => {});
+    }
+  });
+  window.scheduleNativeReminder = (rem) => {
+    if (!native || platform !== 'android' || !rem?.time) return;
+    const triggerAt = Date.parse(rem.time);
+    if (!Number.isFinite(triggerAt)) return;
+    const id = Math.abs(String(rem.id || Date.now()).split('').reduce((a, c) => ((a << 5) - a + c.charCodeAt(0)) | 0, 0));
+    FloatingOverlay.scheduleReminder({ id, title: rem.title || 'Class Reminder', triggerAt }).catch(() => {});
+  };
   document.addEventListener('visibilitychange',()=>{if(document.hidden)persist().catch(report);else updateTrial().catch(report);});
   const rawTrial=await read(TRIAL_KEY);trial=trialState(parse(rawTrial,null),Date.now(),config.trialDays);await write(TRIAL_KEY,JSON.stringify(trial.record));
   library=parse(await read(LIBRARY_KEY),[]);if(!Array.isArray(library))library=[];

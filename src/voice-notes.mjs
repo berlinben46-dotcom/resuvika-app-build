@@ -1,7 +1,6 @@
 /**
- * Class Voice Notes recorder & player (IndexedDB-backed for offline reliability).
+ * Class Voice Notes recorder & player (Native Android MediaRecorder + IndexedDB offline storage).
  */
-
 import { Capacitor } from '@capacitor/core';
 import { FloatingOverlay } from './shell.mjs';
 
@@ -76,12 +75,20 @@ function blobToBase64(blob) {
   });
 }
 
+function base64ToBlob(b64, mimeType) {
+  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  return new Blob([bytes], { type: mimeType || 'audio/mp4' });
+}
+
 export function createVoiceNotesManager({ sheet, el, button, shareFile, toast }) {
+  const isNative = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+  let nativeRecording = false;
   let recorder = null;
   let stream = null;
   let chunks = [];
   let startedAt = 0;
   let timerId = null;
+  let needsMicSettings = false;
 
   const pill = () => document.getElementById('mob-btn-voice');
 
@@ -95,17 +102,59 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
     }
   };
 
+  const startTimerUi = () => {
+    startedAt = Date.now();
+    const btn = pill();
+    if (btn) {
+      btn.classList.add('recording');
+      btn.textContent = '🔴 0:00';
+    }
+    timerId = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      const b = pill();
+      if (b) b.textContent = `🔴 ${formatDuration(elapsed)}`;
+    }, 1000);
+  };
+
+  async function saveCapturedBlob(blob, durationSec, mimeType) {
+    const now = new Date();
+    const note = {
+      id: `voice-${Date.now()}`,
+      title: `Class Voice ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+      createdAt: Date.now(),
+      durationSec,
+      mimeType,
+      blob
+    };
+    await saveNote(note);
+    toast?.(`🎙️ Saved ${note.title} (${formatDuration(durationSec)})!`, 3500);
+    showVoiceNotes();
+  }
+
   async function startRecording() {
-    if (Capacitor.isNativePlatform()) {
+    needsMicSettings = false;
+    if (isNative) {
       try {
-        const perm = await FloatingOverlay.requestMic();
-        if (perm && perm.granted === false) {
-          toast?.('Please allow Microphone permission to record class voice notes.', 4000);
+        const res = await FloatingOverlay.startVoiceRecord();
+        if (res?.needsSettings) {
+          needsMicSettings = true;
+          toast?.('Microphone is blocked. Tap "Open Microphone Settings" to allow.', 4500);
           showVoiceNotes();
           return false;
         }
-      } catch (_) {}
+        if (res?.started) {
+          nativeRecording = true;
+          startTimerUi();
+          toast?.('🎙️ Recording class voice note… Keep drawing or taking notes!', 3000);
+          return true;
+        }
+      } catch (err) {
+        toast?.(err?.message || 'Could not start microphone.', 4000);
+        showVoiceNotes();
+        return false;
+      }
     }
+
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
       toast?.('Voice recording is not supported on this device.', 3500);
       showVoiceNotes();
@@ -113,7 +162,8 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
     }
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch (err) {
+    } catch {
+      needsMicSettings = true;
       toast?.('Microphone permission is needed to record class voice notes.', 4000);
       showVoiceNotes();
       return false;
@@ -122,7 +172,6 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
     chunks = [];
     const mimeType = pickMimeType();
     recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-    startedAt = Date.now();
 
     recorder.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) chunks.push(e.data);
@@ -136,38 +185,30 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
       stream = null;
       recorder = null;
       resetPill();
-
-      const now = new Date();
-      const note = {
-        id: `voice-${Date.now()}`,
-        title: `Class Voice ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-        createdAt: Date.now(),
-        durationSec,
-        mimeType: finalType,
-        blob
-      };
-      await saveNote(note);
-      toast?.(`🎙️ Saved ${note.title} (${formatDuration(durationSec)})!`, 3500);
-      showVoiceNotes();
+      await saveCapturedBlob(blob, durationSec, finalType);
     };
 
     recorder.start(500);
-    const btn = pill();
-    if (btn) {
-      btn.classList.add('recording');
-      btn.textContent = '🔴 0:00';
-    }
-    timerId = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
-      const b = pill();
-      if (b) b.textContent = `🔴 ${formatDuration(elapsed)}`;
-    }, 1000);
-
+    startTimerUi();
     toast?.('🎙️ Recording class voice note… Keep drawing or taking notes!', 3000);
     return true;
   }
 
-  function stopRecording() {
+  async function stopRecording() {
+    if (isNative && nativeRecording) {
+      nativeRecording = false;
+      resetPill();
+      try {
+        const res = await FloatingOverlay.stopVoiceRecord();
+        if (res?.base64) {
+          const blob = base64ToBlob(res.base64, res.mimeType || 'audio/mp4');
+          await saveCapturedBlob(blob, res.durationSec || 1, res.mimeType || 'audio/mp4');
+        }
+      } catch (err) {
+        toast?.(err?.message || 'Could not save recording.', 4000);
+      }
+      return true;
+    }
     if (recorder && recorder.state !== 'inactive') {
       recorder.stop();
       return true;
@@ -177,24 +218,31 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
   }
 
   async function toggleRecording() {
-    if (recorder && recorder.state !== 'inactive') {
-      stopRecording();
-      return false;
+    if (nativeRecording || (recorder && recorder.state !== 'inactive')) {
+      return stopRecording();
     }
     return startRecording();
   }
 
   async function showVoiceNotes() {
     const body = sheet('🎙️ Class Voice Notes');
-    const isRec = Boolean(recorder && recorder.state !== 'inactive');
+    const isRec = nativeRecording || Boolean(recorder && recorder.state !== 'inactive');
 
     body.append(
       el('p', 'Record lectures or quick explanations right while drawing on the board. Saved offline on this device.'),
       button(isRec ? '⏹️ Stop Recording Now' : '🎙️ Start Recording Class Voice', async () => {
         await toggleRecording();
-        showVoiceNotes();
+        if (!isRec) showVoiceNotes();
       }, 'primary')
     );
+
+    if (needsMicSettings && isNative) {
+      body.append(
+        button('⚙️ Open Microphone Settings (Allow Mic)', async () => {
+          try { await FloatingOverlay.openAppSettings(); } catch {}
+        })
+      );
+    }
 
     body.append(el('h2', 'Saved Recordings'));
     const notes = await listNotes();
@@ -225,7 +273,7 @@ export function createVoiceNotesManager({ sheet, el, button, shareFile, toast })
       row.append(
         button('Share', async () => {
           const b64 = await blobToBase64(note.blob);
-          await shareFile(`${note.title.replace(/[^a-z0-9_-]+/gi, '_')}.${ext}`, b64, note.mimeType || 'audio/webm', true);
+          await shareFile(`${note.title.replace(/[^a-z0-9_-]+/gi, '_')}.${ext}`, b64, note.mimeType || 'audio/mp4', true);
         }),
         button('Delete', async () => {
           URL.revokeObjectURL(url);

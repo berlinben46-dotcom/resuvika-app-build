@@ -18,7 +18,5 @@ public class MainActivity extends BridgeActivity {
     }
     @Override public void onResume() {
         super.onResume();
-        // Returning to the board removes global windows; the service saves its ink draft.
-        if(OverlayService.running)stopService(new Intent(this,OverlayService.class));
     }
 }

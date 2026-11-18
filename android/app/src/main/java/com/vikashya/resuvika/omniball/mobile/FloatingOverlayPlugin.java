@@ -80,5 +80,112 @@ public class FloatingOverlayPlugin extends Plugin {
         });
     }
     @PluginMethod public void stop(PluginCall call){getContext().stopService(new Intent(getContext(),OverlayService.class));call.resolve();}
+
+    @PluginMethod public void openAppSettings(PluginCall call){
+        getActivity().runOnUiThread(()->{
+            try{
+                Intent intent=new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.parse("package:"+getContext().getPackageName()));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                getActivity().startActivity(intent);
+                call.resolve();
+            }catch(Exception e){call.reject("Open Android Settings > Apps > Resuvika Omniball > Permissions to allow Microphone.");}
+        });
+    }
+
+    private android.media.MediaRecorder voiceRecorder;
+    private java.io.File voiceFile;
+    private long voiceStartedAt=0;
+
+    @PluginMethod public void startVoiceRecord(PluginCall call){
+        if(getPermissionState("mic")!=PermissionState.GRANTED){
+            requestPermissionForAlias("mic",call,"startVoiceAfterMic");
+            return;
+        }
+        beginNativeVoiceRecord(call);
+    }
+    @PermissionCallback private void startVoiceAfterMic(PluginCall call){
+        if(getPermissionState("mic")!=PermissionState.GRANTED){
+            JSObject r=new JSObject();r.put("started",false);r.put("needsSettings",true);call.resolve(r);return;
+        }
+        beginNativeVoiceRecord(call);
+    }
+    private void beginNativeVoiceRecord(PluginCall call){
+        try{
+            stopRecorderSilently();
+            java.io.File dir=new java.io.File(getContext().getFilesDir(),"voice_notes");
+            if(!dir.exists())dir.mkdirs();
+            voiceFile=new java.io.File(dir,"voice_"+System.currentTimeMillis()+".m4a");
+            voiceRecorder=Build.VERSION.SDK_INT>=31?new android.media.MediaRecorder(getContext()):new android.media.MediaRecorder();
+            voiceRecorder.setAudioSource(android.media.MediaRecorder.AudioSource.MIC);
+            voiceRecorder.setOutputFormat(android.media.MediaRecorder.OutputFormat.MPEG_4);
+            voiceRecorder.setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AAC);
+            voiceRecorder.setAudioEncodingBitRate(96000);
+            voiceRecorder.setAudioSamplingRate(44100);
+            voiceRecorder.setOutputFile(voiceFile.getAbsolutePath());
+            voiceRecorder.prepare();
+            voiceRecorder.start();
+            voiceStartedAt=System.currentTimeMillis();
+            JSObject r=new JSObject();r.put("started",true);call.resolve(r);
+        }catch(Exception e){
+            stopRecorderSilently();
+            call.reject("Could not start microphone: "+e.getMessage());
+        }
+    }
+    @PluginMethod public void stopVoiceRecord(PluginCall call){
+        try{
+            long durationSec=Math.max(1,(System.currentTimeMillis()-voiceStartedAt)/1000);
+            if(voiceRecorder!=null){try{voiceRecorder.stop();}catch(Exception ignored){} voiceRecorder.release();voiceRecorder=null;}
+            if(voiceFile==null||!voiceFile.exists()){call.reject("No recording found.");return;}
+            byte[] bytes=java.nio.file.Files.readAllBytes(voiceFile.toPath());
+            String b64=android.util.Base64.encodeToString(bytes,android.util.Base64.NO_WRAP);
+            JSObject r=new JSObject();
+            r.put("base64",b64);
+            r.put("durationSec",(int)durationSec);
+            r.put("mimeType","audio/mp4");
+            call.resolve(r);
+        }catch(Exception e){call.reject("Could not save voice recording: "+e.getMessage());}
+    }
+    private void stopRecorderSilently(){
+        if(voiceRecorder!=null){try{voiceRecorder.stop();}catch(Exception ignored){} try{voiceRecorder.release();}catch(Exception ignored){} voiceRecorder=null;}
+    }
+
+    @PluginMethod public void scheduleReminder(PluginCall call){
+        if(Build.VERSION.SDK_INT>=33&&getPermissionState("notifications")!=PermissionState.GRANTED){
+            requestPermissionForAlias("notifications",call,"scheduleReminderAfterPerm");
+            return;
+        }
+        doScheduleReminder(call);
+    }
+    @PermissionCallback private void scheduleReminderAfterPerm(PluginCall call){doScheduleReminder(call);}
+    private void doScheduleReminder(PluginCall call){
+        try{
+            String title=call.getString("title","Class Reminder");
+            long triggerAt=call.getLong("triggerAt",System.currentTimeMillis()+60000L);
+            int id=call.getInt("id",(int)(System.currentTimeMillis()&0x7fffffff));
+            android.app.AlarmManager am=(android.app.AlarmManager)getContext().getSystemService(Context.ALARM_SERVICE);
+            Intent intent=new Intent(getContext(),ReminderReceiver.class).putExtra("title",title).putExtra("id",id);
+            android.app.PendingIntent pi=android.app.PendingIntent.getBroadcast(getContext(),id,intent,android.app.PendingIntent.FLAG_UPDATE_CURRENT|android.app.PendingIntent.FLAG_IMMUTABLE);
+            if(am!=null){
+                if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M)am.setAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP,triggerAt,pi);
+                else am.set(android.app.AlarmManager.RTC_WAKEUP,triggerAt,pi);
+            }
+            call.resolve();
+        }catch(Exception e){call.reject("Could not schedule reminder: "+e.getMessage());}
+    }
+
+    @PluginMethod public void startTvServer(PluginCall call){
+        LocalTvServer.start();
+        String ip=LocalTvServer.getLocalIpAddress(getContext());
+        JSObject r=new JSObject();
+        r.put("ip",ip);
+        r.put("port",LocalTvServer.PORT);
+        r.put("url",ip.isEmpty()?"":"http://"+ip+":"+LocalTvServer.PORT);
+        call.resolve(r);
+    }
+    @PluginMethod public void updateTvBoard(PluginCall call){
+        String json=call.getString("json","");
+        LocalTvServer.updateBoard(json);
+        call.resolve();
+    }
     private static class DateLimit{static final double MAX=4102444800000.0;}
 }

@@ -360,18 +360,45 @@ class ClassNotepad {
         if (window.showToast) showToast('Enter a reminder title first');
         return;
       }
-      this.reminders.unshift({
+      const newRem = {
         id: 'rem-' + Date.now(),
         title,
         time: timeInput?.value || '',
-        done: false
-      });
+        done: false,
+        notified: false
+      };
+      this.reminders.unshift(newRem);
+      if (newRem.time && window.scheduleNativeReminder) {
+        window.scheduleNativeReminder(newRem);
+      }
       if (titleInput) titleInput.value = '';
       if (timeInput) timeInput.value = '';
       this.renderReminders();
       this.saveToStorage();
-      if (window.showToast) showToast('⏰ Reminder added!');
+      if (window.showToast) showToast('⏰ Reminder scheduled!');
     });
+
+    // Check due reminders every 10 seconds while app is open
+    if (!this._remInterval) {
+      this._remInterval = setInterval(() => {
+        const now = Date.now();
+        let changed = false;
+        for (const rem of this.reminders) {
+          if (!rem.done && !rem.notified && rem.time) {
+            const target = Date.parse(rem.time);
+            if (Number.isFinite(target) && target <= now) {
+              rem.notified = true;
+              changed = true;
+              if (window.showToast) window.showToast(`⏰ Reminder: ${rem.title}`, 8000);
+            }
+          }
+        }
+        if (changed) {
+          this.renderReminders();
+          this.saveToStorage();
+        }
+      }, 10000);
+    }
 
     // Paper Background Switcher
     document.querySelectorAll('.np-bg-btn').forEach(btn => {
