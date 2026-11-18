@@ -29,9 +29,18 @@ class DrawingCanvas {
     this.currentBackground = 'transparent'; // 'transparent', 'whiteboard', 'blackboard', 'chalkboard', 'grid'
     this.stepCounter = 1;
 
-    // Elements stack for vector rendering and undo/redo
+    // Elements stack for vector rendering and undo/redo + Multi-Page support
     this.elements = [];
     this.redoStack = [];
+    this.pages = [{ elements: this.elements, background: 'whiteboard', panX: 0, panY: 0 }];
+    this.currentPageIndex = 0;
+
+    // Infinite scroll / pan offset
+    this.panX = 0;
+    this.panY = 0;
+    this.isPanning = false;
+    this.panStart = null;
+    this.activeTouches = new Map();
 
     // Pointer drawing state
     this.isDrawing = false;
@@ -66,10 +75,74 @@ class DrawingCanvas {
       canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
     });
     for (const ctx of [this.bgCtx, this.ctx, this.liveCtx,this.laserCtx]) {
-      ctx.setTransform(this.dpr * this.boardScale, 0, 0, this.dpr * this.boardScale, this.offsetX * this.dpr, this.offsetY * this.dpr);
+      ctx.setTransform(this.dpr * this.boardScale, 0, 0, this.dpr * this.boardScale, (this.offsetX + this.panX * this.boardScale) * this.dpr, (this.offsetY + this.panY * this.boardScale) * this.dpr);
     }
     this.redrawAllElements(); this.renderBackground(); this.refreshTextEditor?.();
     this.renderLivePreviews();
+  }
+
+  applyViewportTransform() {
+    for (const ctx of [this.bgCtx, this.ctx, this.liveCtx, this.laserCtx]) {
+      ctx.setTransform(this.dpr * this.boardScale, 0, 0, this.dpr * this.boardScale, (this.offsetX + this.panX * this.boardScale) * this.dpr, (this.offsetY + this.panY * this.boardScale) * this.dpr);
+    }
+    this.redrawAllElements();
+    this.renderBackground();
+    this.renderLivePreviews();
+  }
+
+  resetPan() {
+    this.panX = 0;
+    this.panY = 0;
+    this.applyViewportTransform();
+  }
+
+  updatePageIndicator() {
+    const label = document.getElementById('page-indicator-text');
+    if (label) label.textContent = `${this.currentPageIndex + 1} / ${this.pages.length}`;
+    const prevBtn = document.getElementById('btn-prev-page');
+    if (prevBtn) prevBtn.disabled = this.currentPageIndex <= 0;
+    const nextBtn = document.getElementById('btn-next-page');
+    if (nextBtn) nextBtn.disabled = this.currentPageIndex >= this.pages.length - 1;
+  }
+
+  saveCurrentPageState() {
+    if (!this.pages[this.currentPageIndex]) {
+      this.pages[this.currentPageIndex] = { elements: [], background: this.currentBackground, panX: 0, panY: 0 };
+    }
+    this.pages[this.currentPageIndex].elements = this.elements;
+    this.pages[this.currentPageIndex].background = this.currentBackground;
+    this.pages[this.currentPageIndex].panX = this.panX;
+    this.pages[this.currentPageIndex].panY = this.panY;
+  }
+
+  switchToPage(idx) {
+    if (idx < 0 || idx >= this.pages.length) return;
+    this.saveCurrentPageState();
+    this.currentPageIndex = idx;
+    const page = this.pages[idx];
+    this.elements = page.elements || [];
+    this.redoStack = [];
+    this.panX = page.panX || 0;
+    this.panY = page.panY || 0;
+    this.currentBackground = page.background || this.currentBackground;
+    this.applyViewportTransform();
+    this.updatePageIndicator();
+  }
+
+  addNewPage() {
+    this.saveCurrentPageState();
+    const newPage = { elements: [], background: this.currentBackground, panX: 0, panY: 0 };
+    this.pages.splice(this.currentPageIndex + 1, 0, newPage);
+    this.switchToPage(this.currentPageIndex + 1);
+    if (window.showToast) window.showToast(`Page ${this.currentPageIndex + 1} (Blank)`);
+  }
+
+  prevPage() {
+    if (this.currentPageIndex > 0) this.switchToPage(this.currentPageIndex - 1);
+  }
+
+  nextPage() {
+    if (this.currentPageIndex < this.pages.length - 1) this.switchToPage(this.currentPageIndex + 1);
   }
 
   bindEvents() {
@@ -88,14 +161,42 @@ class DrawingCanvas {
   getPointerCoords(e) {
     const rect = this.drawCanvas.getBoundingClientRect();
     return {
-      x: (e.clientX - rect.left - this.offsetX) / this.boardScale,
-      y: (e.clientY - rect.top - this.offsetY) / this.boardScale,
+      x: (e.clientX - rect.left - this.offsetX) / this.boardScale - this.panX,
+      y: (e.clientY - rect.top - this.offsetY) / this.boardScale - this.panY,
       pressure: e.pressure > 0 ? e.pressure : 0.5,
       type: e.pointerType || 'mouse'
     };
   }
 
   onPointerDown(e) {
+    if (e.pointerType === 'touch') {
+      this.activeTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      // Two-finger pan: cancel any single-finger draft and start panning
+      if (this.activeTouches.size >= 2) {
+        if (this.isDrawing && this.currentStroke) {
+          this.isDrawing = false;
+          this.currentStroke = null;
+          this.activePointerId = null;
+          this.clearLayer(this.liveCtx, this.liveCanvas);
+        }
+        this.isPanning = true;
+        const pts = [...this.activeTouches.values()];
+        this.panStart = {
+          cx: (pts[0].x + pts[1].x) / 2,
+          cy: (pts[0].y + pts[1].y) / 2,
+          panX: this.panX,
+          panY: this.panY
+        };
+        return;
+      }
+    }
+    if (this.activeTool === 'pan') {
+      this.isPanning = true;
+      this.activePointerId = e.pointerId;
+      this.panStart = { cx: e.clientX, cy: e.clientY, panX: this.panX, panY: this.panY };
+      try { this.drawCanvas.setPointerCapture(e.pointerId); } catch (_) {}
+      return;
+    }
     if(this.pencilOnly && e.pointerType==='touch')return;
     if(this.activePointerId!==null)return;
     e.preventDefault?.();
@@ -192,6 +293,24 @@ class DrawingCanvas {
   }
 
   onPointerMove(e) {
+    if (e.pointerType === 'touch' && this.activeTouches.has(e.pointerId)) {
+      this.activeTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (this.isPanning && this.activeTouches.size >= 2 && this.panStart) {
+        const pts = [...this.activeTouches.values()];
+        const cx = (pts[0].x + pts[1].x) / 2;
+        const cy = (pts[0].y + pts[1].y) / 2;
+        this.panX = this.panStart.panX + (cx - this.panStart.cx) / this.boardScale;
+        this.panY = this.panStart.panY + (cy - this.panStart.cy) / this.boardScale;
+        this.applyViewportTransform();
+        return;
+      }
+    }
+    if (this.isPanning && this.activeTool === 'pan' && this.panStart) {
+      this.panX = this.panStart.panX + (e.clientX - this.panStart.cx) / this.boardScale;
+      this.panY = this.panStart.panY + (e.clientY - this.panStart.cy) / this.boardScale;
+      this.applyViewportTransform();
+      return;
+    }
     if(this.pencilOnly && e.pointerType==='touch')return;
     if(this.activeTool==='laser'&&!this.isLaserActive)return;
     if (!this.isDrawing && this.activeTool !== 'laser') return;
@@ -233,6 +352,16 @@ class DrawingCanvas {
   }
 
   onPointerUp(e) {
+    if (e.pointerType === 'touch') this.activeTouches.delete(e.pointerId);
+    if (this.isPanning && (this.activeTool === 'pan' || this.activeTouches.size < 2)) {
+      this.isPanning = false;
+      this.panStart = null;
+      if (this.activeTool === 'pan') {
+        try { this.drawCanvas.releasePointerCapture(e.pointerId); } catch (_) {}
+        this.activePointerId = null;
+      }
+      return;
+    }
     if(this.activePointerId!==null&&e.pointerId!==this.activePointerId)return;
     if (!this.isDrawing && this.activeTool !== 'laser') return;
     const pointerId=this.activePointerId;this.isDrawing=false;this.activePointerId=null;this.activePointerType=null;
@@ -264,6 +393,8 @@ class DrawingCanvas {
   }
 
   cancelPointer(e) {
+    if (e.pointerType === 'touch') this.activeTouches.delete(e.pointerId);
+    if (this.isPanning) { this.isPanning = false; this.panStart = null; }
     if(this.activePointerId!==null && e.pointerId!==this.activePointerId)return;
     const pointerId=this.activePointerId;
     this.isDrawing=false;this.isLaserActive=false;this.activePointerId=null;this.activePointerType=null;this.currentStroke=null;
@@ -807,7 +938,10 @@ class DrawingCanvas {
   }
 
   renderBackground() {
-    this.bgCtx.clearRect(0, 0, this.width, this.height);
+    this.clearLayer(this.bgCtx, this.bgCanvas);
+    this.bgCtx.save();
+    this.bgCtx.setTransform(1, 0, 0, 1, 0, 0);
+    const w = this.bgCanvas.width, h = this.bgCanvas.height;
 
     switch (this.currentBackground) {
       case 'transparent':
@@ -815,40 +949,43 @@ class DrawingCanvas {
 
       case 'whiteboard':
         this.bgCtx.fillStyle = '#ffffff';
-        this.bgCtx.fillRect(0, 0, this.width, this.height);
+        this.bgCtx.fillRect(0, 0, w, h);
         break;
 
       case 'blackboard':
         this.bgCtx.fillStyle = '#0f172a';
-        this.bgCtx.fillRect(0, 0, this.width, this.height);
+        this.bgCtx.fillRect(0, 0, w, h);
         break;
 
       case 'chalkboard':
         this.bgCtx.fillStyle = '#143b2f';
-        this.bgCtx.fillRect(0, 0, this.width, this.height);
+        this.bgCtx.fillRect(0, 0, w, h);
         break;
 
       case 'grid': {
         this.bgCtx.fillStyle = '#f8fafc';
-        this.bgCtx.fillRect(0, 0, this.width, this.height);
+        this.bgCtx.fillRect(0, 0, w, h);
         this.bgCtx.strokeStyle = '#e2e8f0';
-        this.bgCtx.lineWidth = 1;
-        const gridSize = 28;
-        for (let x = 0; x < this.width; x += gridSize) {
+        this.bgCtx.lineWidth = Math.max(1, this.dpr);
+        const gridSize = 28 * this.dpr * this.boardScale;
+        const offX = ((this.offsetX + this.panX * this.boardScale) * this.dpr) % gridSize;
+        const offY = ((this.offsetY + this.panY * this.boardScale) * this.dpr) % gridSize;
+        for (let x = offX; x < w; x += gridSize) {
           this.bgCtx.beginPath();
           this.bgCtx.moveTo(x, 0);
-          this.bgCtx.lineTo(x, this.height);
+          this.bgCtx.lineTo(x, h);
           this.bgCtx.stroke();
         }
-        for (let y = 0; y < this.height; y += gridSize) {
+        for (let y = offY; y < h; y += gridSize) {
           this.bgCtx.beginPath();
           this.bgCtx.moveTo(0, y);
-          this.bgCtx.lineTo(this.width, y);
+          this.bgCtx.lineTo(w, y);
           this.bgCtx.stroke();
         }
         break;
       }
     }
+    this.bgCtx.restore();
   }
 
   undo(isRemote = false) {

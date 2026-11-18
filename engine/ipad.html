@@ -82,6 +82,26 @@
 
   <button class="ipad-fullscreen-btn" id="ipad-fs-btn" title="Toggle Fullscreen">⛶ Fullscreen</button>
 
+  <!-- Clean Top-Right Quick Bar (Notes + TV/PC Connect) -->
+  <div id="mobile-top-actions" class="mobile-top-actions">
+    <button type="button" id="mob-btn-notes" class="mob-top-pill" title="Open Class Notes">📝 Notes</button>
+    <button type="button" id="mob-btn-connect" class="mob-top-pill" title="Connect Laptop or Smart TV">📺 TV / PC</button>
+  </div>
+
+  <!-- Simple Bottom Kid-Friendly Bar (Pen, Scroll, Eraser, Undo, Multi-Page) -->
+  <nav id="mobile-bottom-bar" class="mobile-bottom-bar" aria-label="Quick drawing and page controls">
+    <button type="button" class="mob-bar-btn active" id="mob-tool-pen" title="Write / Draw">✏️<span>Pen</span></button>
+    <button type="button" class="mob-bar-btn" id="mob-tool-pan" title="Scroll down, up, left or right">✋<span>Scroll</span></button>
+    <button type="button" class="mob-bar-btn" id="mob-tool-eraser" title="Eraser">🧹<span>Erase</span></button>
+    <button type="button" class="mob-bar-btn" id="mob-tool-undo" title="Undo">↩️<span>Undo</span></button>
+    <div class="mob-page-pill">
+      <button type="button" id="btn-prev-page" class="mob-pg-arrow" title="Previous Page">◀</button>
+      <span id="page-indicator-text" class="mob-pg-num">1 / 1</span>
+      <button type="button" id="btn-next-page" class="mob-pg-arrow" title="Next Page">▶</button>
+      <button type="button" id="btn-add-page" class="mob-pg-add" title="Add Next Blank Page">➕</button>
+    </div>
+  </nav>
+
   <!-- Main Canvas Container -->
   <div id="canvas-container">
     <video id="screen-video" autoplay playsinline muted style="display: none;"></video>
@@ -224,89 +244,112 @@
     </div>
   </header>
 
-  <!-- Inbuilt Notepad (Evernote / OneNote style with WhatsApp & 1-Click Share) -->
+  <!-- Full-Screen Clean Resuvika Classpad -->
   <aside id="floating-notepad" class="glass-panel notepad-panel hidden">
     <div class="notepad-header" id="notepad-drag-handle">
       <div class="notepad-title-group">
-        <span class="notepad-icon">📝</span>
-        <span class="notepad-title">Resuvika Notes & Notebooks</span>
+        <button class="np-action-btn" id="np-toggle-org" title="Notebooks &amp; Reminders">🗂️</button>
+        <span class="notepad-title">Resuvika Classpad</span>
       </div>
+
+      <div class="np-input-mode-switch" title="Switch between Typing and Pen">
+        <button type="button" class="np-mode-pill active" id="np-mode-keypad">⌨️ Type</button>
+        <button type="button" class="np-mode-pill" id="np-mode-pen">✏️ Draw</button>
+      </div>
+
       <div class="notepad-header-actions">
-        <button class="np-action-btn" id="np-pin-btn" title="Pin note on top">📌</button>
-        <button class="np-action-btn" id="np-max-btn" title="Maximize / Restore window size">⛶</button>
-        <button class="np-action-btn" id="np-minimize-btn" title="Minimize">−</button>
-        <button class="np-action-btn" id="np-close-btn" title="Close">✕</button>
+        <button class="np-action-btn" id="np-pin-btn" title="Pin" style="display:none;">📌</button>
+        <button class="np-action-btn" id="np-max-btn" title="Size" style="display:none;">⛶</button>
+        <button class="np-action-btn" id="np-minimize-btn" title="Min" style="display:none;">−</button>
+        <button class="np-action-btn" id="np-close-btn" title="Close Notes">✕</button>
       </div>
     </div>
 
-    <!-- Notebook Search & Note Tabs -->
-    <div class="notepad-search-row">
-      <input type="text" id="np-search-input" class="np-search-bar" placeholder="🔍 Search notes or topics...">
-    </div>
+    <div class="np-onenote-shell">
+      <!-- Slide-over Organizer (Classpads, Chapters & Reminders) -->
+      <div class="np-organizer collapsed" id="np-organizer">
+        <div class="np-org-tabs">
+          <button type="button" class="np-org-tab active" id="np-org-tab-notes">📚 Folders</button>
+          <button type="button" class="np-org-tab" id="np-org-tab-reminders">⏰ Remind</button>
+        </div>
 
-    <div class="notepad-tabs-bar" id="np-tabs-bar">
-      <button class="np-add-tab-btn" id="np-add-tab" title="Create New Note">+ New Note</button>
-    </div>
+        <div class="np-org-pane" id="np-org-notes-pane">
+          <div class="notepad-search-row">
+            <input type="text" id="np-search-input" class="np-search-bar" placeholder="🔍 Search notes...">
+          </div>
+          <div class="np-org-actions">
+            <button type="button" class="np-org-add-btn" id="np-add-classpad">+ Folder</button>
+            <button type="button" class="np-org-add-btn" id="np-add-tab">+ Page</button>
+          </div>
+          <div class="np-classpad-list" id="np-tabs-bar"></div>
+        </div>
 
-    <!-- Rich Evernote / OneNote Format Toolbar -->
-    <div class="notepad-format-bar">
-      <div class="fmt-group">
-        <button class="np-fmt-btn" data-fmt="h1" title="Heading 1">H1</button>
-        <button class="np-fmt-btn" data-fmt="h2" title="Heading 2">H2</button>
-        <button class="np-fmt-btn" data-fmt="h3" title="Heading 3">H3</button>
+        <div class="np-org-pane hidden" id="np-org-reminders-pane">
+          <div class="np-rem-form">
+            <input type="text" id="np-rem-title" class="np-search-bar" placeholder="Reminder title...">
+            <input type="datetime-local" id="np-rem-time" class="np-search-bar">
+            <button type="button" id="np-rem-add-btn" class="np-org-add-btn" style="width:100%;">⏰ Add Reminder</button>
+          </div>
+          <div class="np-rem-list" id="np-rem-list"></div>
+        </div>
       </div>
-      <div class="fmt-group">
-        <button class="np-fmt-btn" data-fmt="bold" title="Bold"><b>B</b></button>
-        <button class="np-fmt-btn" data-fmt="italic" title="Italic"><i>I</i></button>
-        <button class="np-fmt-btn" data-fmt="underline" title="Underline"><u>U</u></button>
-        <button class="np-fmt-btn" data-fmt="strike" title="Strikethrough"><s>S</s></button>
-        <button class="np-fmt-btn" data-fmt="highlight" title="Highlight">🖍️</button>
-      </div>
-      <div class="fmt-group">
-        <button class="np-fmt-btn" data-fmt="check" title="Add To-Do Checkbox">☑</button>
-        <button class="np-fmt-btn" data-fmt="toggle-check" title="Toggle Checkbox Complete">✓</button>
-        <button class="np-fmt-btn" data-fmt="bullet" title="Bullet List">•</button>
-        <button class="np-fmt-btn" data-fmt="number" title="Numbered List">1.</button>
-        <button class="np-fmt-btn" data-fmt="quote" title="Quote">❝</button>
-        <button class="np-fmt-btn" data-fmt="code" title="Code / Formula">&lt;/&gt;</button>
-        <button class="np-fmt-btn" data-fmt="divider" title="Divider Line">—</button>
-        <button class="np-fmt-btn" id="np-template-btn" title="Insert Pre-made Student / Lecture Template">📑 Template</button>
-      </div>
-    </div>
 
-    <div class="notepad-body">
-      <div class="np-editor-meta-bar">
-        <label class="np-size-label">Font <input id="np-font-size" type="number" min="10" max="72" value="16" aria-label="Notepad font size"> px</label>
-        <span class="np-word-count" id="np-word-count">0 words • 0 chars</span>
-      </div>
-      <textarea id="np-editor" placeholder="Write lesson outline, formulas, meeting notes, or ideas here..."></textarea>
-    </div>
+      <!-- Full-Screen Paper Workspace -->
+      <div class="np-workspace">
+        <div class="notepad-format-bar">
+          <div class="fmt-group">
+            <button class="np-fmt-btn" data-fmt="bold" title="Bold"><b>B</b></button>
+            <button class="np-fmt-btn" data-fmt="check" title="Checklist">☑</button>
+            <button class="np-fmt-btn" data-fmt="toggle-check" title="Done">✓</button>
+            <button class="np-fmt-btn" data-fmt="bullet" title="List">•</button>
+            <button class="np-fmt-btn" id="np-template-btn" title="Templates">📑</button>
+          </div>
 
-    <div class="notepad-footer">
-      <div class="np-footer-status">
-        <span class="np-status" id="np-save-status">💾 Auto-saved</span>
-      </div>
-      
-      <!-- 1-Click WhatsApp & Export Action Buttons -->
-      <div class="np-footer-share-group">
-        <button class="np-share-btn draw-btn" id="np-draw-canvas" title="Switch to Pen and draw diagram directly on screen">
-          <span class="share-icon">✏️</span> Draw
-        </button>
-        <button class="np-share-btn wa-btn" id="np-share-whatsapp" title="Share directly to WhatsApp in 1-click">
-          <span class="share-icon">💬</span> WhatsApp
-        </button>
-        <button class="np-share-btn share-icon-btn" id="np-share-native" title="Share via any app (Telegram, Drive, Email, etc.)">
-          <span class="share-icon">📤</span> Share
-        </button>
-        <button class="np-share-btn pdf-btn" id="np-export-pdf" title="Download / Print Clean PDF Document">
-          <span class="share-icon">📄</span> PDF
-        </button>
-        <button class="np-share-btn txt-btn" id="np-export-txt" title="Download as Markdown/Text file">
-          <span class="share-icon">📥</span> .md
-        </button>
-        <button class="np-stamp-btn" id="np-stamp-to-canvas" title="Stamp note onto Whiteboard as a visual card">
-          📌 Stamp
-        </button>
+          <div class="fmt-group">
+            <button type="button" class="np-mini-btn" id="np-font-dec">A−</button>
+            <input id="np-font-size" type="number" min="10" max="72" value="16" aria-label="Notepad font size" class="np-size-input">
+            <button type="button" class="np-mini-btn" id="np-font-inc">A+</button>
+          </div>
+
+          <div class="fmt-group np-bg-picker" title="Paper Style">
+            <button type="button" class="np-bg-btn active" data-np-bg="white" title="White">⬜</button>
+            <button type="button" class="np-bg-btn" data-np-bg="cream" title="Cream">🟨</button>
+            <button type="button" class="np-bg-btn" data-np-bg="ruled" title="Lines">📓</button>
+            <button type="button" class="np-bg-btn" data-np-bg="grid" title="Grid">📐</button>
+            <button type="button" class="np-bg-btn" data-np-bg="dark" title="Dark">⬛</button>
+          </div>
+        </div>
+
+        <div class="np-pen-bar hidden" id="np-pen-bar">
+          <button type="button" class="np-pen-color active" data-pen-color="#0f172a" style="background:#0f172a;"></button>
+          <button type="button" class="np-pen-color" data-pen-color="#2563eb" style="background:#2563eb;"></button>
+          <button type="button" class="np-pen-color" data-pen-color="#dc2626" style="background:#dc2626;"></button>
+          <button type="button" class="np-pen-color" data-pen-color="#059669" style="background:#059669;"></button>
+          <select id="np-pen-size" class="np-pen-size-sel">
+            <option value="2">Thin</option>
+            <option value="4" selected>Med</option>
+            <option value="8">Thick</option>
+          </select>
+          <button type="button" class="np-mini-btn" id="np-pen-eraser">🧹</button>
+          <button type="button" class="np-mini-btn" id="np-pen-undo">↩️</button>
+          <button type="button" class="np-mini-btn" id="np-pen-clear">🗑️</button>
+        </div>
+
+        <div class="notepad-body np-paper-white" id="np-paper-area">
+          <textarea id="np-editor" placeholder="Start typing notes here, or tap '✏️ Draw' above to write with your finger or stylus..."></textarea>
+          <canvas id="np-ink-canvas"></canvas>
+        </div>
+
+        <div class="notepad-footer">
+          <span class="np-status" id="np-save-status" style="display:none;">Saved</span>
+          <span class="np-word-count" id="np-word-count" style="display:none;">0 words</span>
+          <div class="np-footer-share-group">
+            <button class="np-share-btn wa-btn" id="np-share-whatsapp">💬 WhatsApp</button>
+            <button class="np-share-btn pdf-btn" id="np-export-pdf">📄 PDF</button>
+            <button class="np-share-btn share-icon-btn" id="np-share-native">📤 Share</button>
+            <button class="np-stamp-btn" id="np-stamp-to-canvas">📌 To Board</button>
+          </div>
+        </div>
       </div>
     </div>
   </aside>

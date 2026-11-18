@@ -79,24 +79,51 @@ public class OverlayService extends Service {
         ToolIcon(String name,int tint){super(OverlayService.this);this.name=name;this.tint=tint;}
         @Override protected void onDraw(Canvas c){String data=PATHS.get(name);if(data==null)data=PATHS.get("pen");Path path=PathParser.createPathFromPathData(data);c.save();float scale=Math.min(getWidth(),getHeight())/24f;c.translate((getWidth()-24*scale)/2,(getHeight()-24*scale)/2);c.scale(scale,scale);p.setColor(tint);p.setStyle(Paint.Style.STROKE);p.setStrokeWidth(1.7f);p.setStrokeCap(Paint.Cap.ROUND);p.setStrokeJoin(Paint.Join.ROUND);c.drawPath(path,p);c.restore();}
     }
+    private LinearLayout drawToggleBtn, menuToggleBtn;
     private void createBubble(){
-        int size=settings.optInt("size",52);if(size!=44&&size!=52&&size!=60)size=52;
-        bubble=new LinearLayout(this);bubble.setGravity(Gravity.CENTER);bubble.setPadding(dp(13),dp(13),dp(13),dp(13));bubble.setBackground(surface(accent,0x88ffffff,60));bubble.setElevation(dp(8));bubble.setContentDescription("Omniball quick tools. Tap to switch back to touch and open tools. Drag to move.");
-        bubble.addView(new ToolIcon(settings.optString("icon","pen"),Color.WHITE),new LinearLayout.LayoutParams(-1,-1));bubbleLayout=layout(dp(size),dp(size),WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL);
-        bubble.setOnClickListener(v->{if(palette==null){setDrawing(false);showPalette();}else removePalette();});
-        String side=prefs.getString("bubbleSide",settings.optString("side","right"));float y=prefs.getFloat("bubbleY",(float)settings.optDouble("y",.65));bubbleLayout.x=side.equals("left")?dp(12):screenWidth-dp(size+12);bubbleLayout.y=Math.max(dp(40),Math.min(screenHeight-dp(size+48),(int)(screenHeight*y)));bubbleLayout.alpha=(float)Math.max(.55,Math.min(1,settings.optDouble("opacity",1)));
-        bubble.setOnTouchListener(new View.OnTouchListener(){float sx,sy;int bx,by;boolean moved;
+        int size=settings.optInt("size",48);if(size<44||size>56)size=48;
+        bubble=new LinearLayout(this);bubble.setOrientation(LinearLayout.HORIZONTAL);bubble.setGravity(Gravity.CENTER);
+        bubble.setPadding(dp(4),dp(4),dp(4),dp(4));bubble.setBackground(surface(0xee0b1f44,0x8838bdf8,28));bubble.setElevation(dp(8));
+        bubble.setContentDescription("Omniball floating pen. Tap pen to draw or touch app; tap menu for colors and tools; drag to move.");
+
+        drawToggleBtn=new LinearLayout(this);drawToggleBtn.setGravity(Gravity.CENTER);drawToggleBtn.setPadding(dp(10),dp(10),dp(10),dp(10));
+        drawToggleBtn.setBackground(surface(Color.rgb(29,43,65),0x66ffffff,24));
+        drawToggleBtn.addView(new ToolIcon("pen",Color.WHITE),new LinearLayout.LayoutParams(dp(20),dp(20)));
+
+        menuToggleBtn=new LinearLayout(this);menuToggleBtn.setGravity(Gravity.CENTER);menuToggleBtn.setPadding(dp(9),dp(10),dp(9),dp(10));
+        menuToggleBtn.addView(new ToolIcon("dot",0xff93c5fd),new LinearLayout.LayoutParams(dp(18),dp(18)));
+
+        bubble.addView(drawToggleBtn,new LinearLayout.LayoutParams(dp(40),dp(40)));
+        bubble.addView(menuToggleBtn,new LinearLayout.LayoutParams(dp(34),dp(40)));
+        bubbleLayout=layout(dp(82),dp(48),WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL);
+
+        String side=prefs.getString("bubbleSide",settings.optString("side","right"));float y=prefs.getFloat("bubbleY",(float)settings.optDouble("y",.65));
+        bubbleLayout.x=side.equals("left")?dp(12):screenWidth-dp(94);
+        bubbleLayout.y=Math.max(dp(40),Math.min(screenHeight-dp(96),(int)(screenHeight*y)));
+        bubbleLayout.alpha=(float)Math.max(.65,Math.min(1,settings.optDouble("opacity",1)));
+
+        View.OnTouchListener dragOrTap=new View.OnTouchListener(){float sx,sy;int bx,by;boolean moved;
             public boolean onTouch(View v,android.view.MotionEvent e){
                 if(e.getAction()==MotionEvent.ACTION_DOWN){sx=e.getRawX();sy=e.getRawY();bx=bubbleLayout.x;by=bubbleLayout.y;moved=false;return true;}
                 if(e.getAction()==MotionEvent.ACTION_MOVE){if(Math.hypot(e.getRawX()-sx,e.getRawY()-sy)>dp(7))moved=true;if(moved){removePalette();bubbleLayout.x=Math.max(0,Math.min(screenWidth-bubbleLayout.width,bx+(int)(e.getRawX()-sx)));bubbleLayout.y=Math.max(dp(28),Math.min(screenHeight-bubbleLayout.height-dp(36),by+(int)(e.getRawY()-sy)));manager.updateViewLayout(bubble,bubbleLayout);}return true;}
-                if(e.getAction()==MotionEvent.ACTION_UP){if(moved){boolean left=bubbleLayout.x<screenWidth/2;bubbleLayout.x=left?dp(12):screenWidth-bubbleLayout.width-dp(12);manager.updateViewLayout(bubble,bubbleLayout);prefs.edit().putString("bubbleSide",left?"left":"right").putFloat("bubbleY",bubbleLayout.y/(float)screenHeight).apply();}else bubble.performClick();return true;}return true;
-            }});
+                if(e.getAction()==MotionEvent.ACTION_UP){
+                    if(moved){boolean left=bubbleLayout.x<screenWidth/2;bubbleLayout.x=left?dp(12):screenWidth-bubbleLayout.width-dp(12);manager.updateViewLayout(bubble,bubbleLayout);prefs.edit().putString("bubbleSide",left?"left":"right").putFloat("bubbleY",bubbleLayout.y/(float)screenHeight).apply();}
+                    else if(v==drawToggleBtn){removePalette();setDrawing(!drawing);toast(drawing?"Pen ON: Draw over screen":"Touch ON: Use app underneath");}
+                    else if(v==menuToggleBtn){if(palette==null){setDrawing(false);showPalette();}else removePalette();}
+                    return true;
+                }
+                return true;
+            }};
+        drawToggleBtn.setOnTouchListener(dragOrTap);
+        menuToggleBtn.setOnTouchListener(dragOrTap);
         manager.addView(bubble,bubbleLayout);
     }
     private float touchOpacity(){float limit=.8f;if(Build.VERSION.SDK_INT>=31){InputManager input=getSystemService(InputManager.class);if(input!=null)limit=input.getMaximumObscuringOpacityForTouch();}return Math.min(.65f,limit*.85f);}
     private void setDrawing(boolean enabled){
         if(ink==null)return;ink.cancelDraft();drawing=enabled;inkLayout.flags=WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE|WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN|(enabled?0:WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);inkLayout.alpha=enabled?1f:touchOpacity();
-        try{manager.updateViewLayout(ink,inkLayout);}catch(Exception ignored){}bubble.setBackground(surface(enabled?accent:Color.rgb(29,43,65),0x99ffffff,60));ink.invalidate();
+        try{manager.updateViewLayout(ink,inkLayout);}catch(Exception ignored){}
+        if(drawToggleBtn!=null)drawToggleBtn.setBackground(surface(enabled?0xff0284c7:Color.rgb(29,43,65),enabled?0xff67e8f9:0x66ffffff,24));
+        ink.invalidate();
     }
     private LinearLayout toolButton(String text,String icon,Runnable action,boolean selected){
         LinearLayout b=new LinearLayout(this);b.setOrientation(LinearLayout.VERTICAL);b.setGravity(Gravity.CENTER);b.setPadding(dp(4),dp(8),dp(4),dp(8));b.setBackground(surface(selected?0xffedecff:0xfff5f7fb,selected?0xffd4d1ff:0,11));b.setContentDescription(text);b.addView(new ToolIcon(icon,selected?accent:0xff465571),new LinearLayout.LayoutParams(dp(22),dp(22)));TextView t=label(text,10,selected?accent:0xff465571);t.setGravity(Gravity.CENTER);LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);lp.topMargin=dp(4);b.addView(t,lp);b.setOnClickListener(v->action.run());return b;

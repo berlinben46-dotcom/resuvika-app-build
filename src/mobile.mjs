@@ -322,7 +322,33 @@ async function start(){
       }
     });
   }
-  window.mobileShell=initMobileShell({canEdit:window.mobileCanEdit,paywall:openPaywall,boards:showLibrary,sheet,closeSheet,persist,fitCanvas:fitCanvasToScreen,syncAccess:syncOverlayAccess,toast:window.showToast,report});
+  window.mobileShell=initMobileShell({canEdit:window.mobileCanEdit,paywall:openPaywall,boards:showLibrary,pairing:showPairing,sheet,closeSheet,persist,fitCanvas:fitCanvasToScreen,syncAccess:syncOverlayAccess,toast:window.showToast,report});
+
+  // Wire up simple top & bottom kid-friendly controls
+  $('mob-btn-notes')?.addEventListener('click', () => {
+    $('floating-notepad')?.classList.remove('hidden');
+  });
+  $('mob-btn-connect')?.addEventListener('click', () => showPairing());
+
+  const setActiveMobTool = (activeId, toolName) => {
+    for (const id of ['mob-tool-pen', 'mob-tool-pan', 'mob-tool-eraser']) {
+      $(id)?.classList.toggle('active', id === activeId);
+    }
+    if (window.drawingCanvas) {
+      window.drawingCanvas.activeTool = toolName;
+    }
+  };
+  $('mob-tool-pen')?.addEventListener('click', () => setActiveMobTool('mob-tool-pen', 'pen'));
+  $('mob-tool-pan')?.addEventListener('click', () => {
+    setActiveMobTool('mob-tool-pan', 'pan');
+    window.showToast?.('Drag anywhere to scroll down, up, left, or right!');
+  });
+  $('mob-tool-eraser')?.addEventListener('click', () => setActiveMobTool('mob-tool-eraser', 'eraser-stroke'));
+  $('mob-tool-undo')?.addEventListener('click', () => window.drawingCanvas?.undo());
+  $('btn-prev-page')?.addEventListener('click', () => window.drawingCanvas?.prevPage());
+  $('btn-next-page')?.addEventListener('click', () => window.drawingCanvas?.nextPage());
+  $('btn-add-page')?.addEventListener('click', () => window.drawingCanvas?.addNewPage());
+  window.drawingCanvas?.updatePageIndicator?.();
   window.addEventListener('resize',()=>{const board=window.drawingCanvas;if(!board.elements.length&&!board.clearUndo?.length&&!board.isDrawing&&!['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)){board.setBoardSize(window.innerWidth,window.innerHeight);queueSave();}});
   try{await configurePurchases();}catch{window.showToast('Could not connect to purchases. You can retry from Full version.',5000);}
   if(native){

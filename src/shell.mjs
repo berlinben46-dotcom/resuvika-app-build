@@ -66,9 +66,23 @@ export function initMobileShell(actions){
   }
   function showAllTools(){const body=sheet('Choose a tool');const grid=node('div',null,'omni-all-tools');for(const [id,label]of [...tools,['rounded-rect','Rounded box'],['triangle','Triangle'],['axes','XY axes'],['step-badge','Step badge'],['double-arrow','Dual arrow'],['bucket','Fill color']])grid.append(button(label,id,()=>{if(!actions.canEdit()){actions.paywall();return;}choose(id);actions.closeSheet();},'omni-tool'));body.append(grid);}
   function showMore(){
-    const body=sheet('Your workspace');const list=node('div',null,'omni-menu-list');
-    for(const [label,id,fn] of [['All drawing tools','layers',showAllTools],['Boards & export','board',actions.boards],['Class notes','text',()=>{actions.closeSheet();document.body.classList.remove('menus-hidden','tablet-tools-hidden');document.getElementById('floating-notepad').classList.remove('hidden');}],['Undo','undo',()=>editAction(()=>window.drawingCanvas.undo())],['Redo','redo',()=>editAction(()=>window.drawingCanvas.redo())],['Clear screen','clear',()=>editAction(()=>window.drawingCanvas.clear())],['Recording view','record',()=>{actions.closeSheet();document.getElementById('recording-options').click();}],['Customize controls','settings',showSettings],['Full version & purchases','spark',actions.paywall]])list.append(button(label,id,fn,'omni-menu-item'));
-    if(Capacitor.getPlatform()!=='ios')list.prepend(button('Draw over other apps','layers',showOverlay,'omni-menu-item'));
+    const body=sheet('Resuvika Omniball Menu');const list=node('div',null,'omni-menu-list');
+    const items = [
+      ['Connect Laptop / Smart TV (Code)','board',()=>{actions.closeSheet();actions.pairing?.();}],
+      ['Add Next Blank Page (+ Page)','rect',()=>{actions.closeSheet();window.drawingCanvas.addNewPage?.();}],
+      ['Scroll / Pan Canvas','touch',()=>{choose('pan');actions.closeSheet();actions.toast('Drag anywhere to scroll down, up, left or right');}],
+      ['Class Notes (Full Screen)','text',()=>{actions.closeSheet();document.body.classList.remove('menus-hidden','tablet-tools-hidden');document.getElementById('floating-notepad').classList.remove('hidden');}],
+      ['All Drawing Tools','layers',showAllTools],
+      ['Boards & Multi-Page Export','board',actions.boards],
+      ['Undo','undo',()=>editAction(()=>window.drawingCanvas.undo())],
+      ['Redo','redo',()=>editAction(()=>window.drawingCanvas.redo())],
+      ['Clear Current Page','clear',()=>editAction(()=>window.drawingCanvas.clear())],
+      ['Clean Recording Mode','record',()=>{actions.closeSheet();document.getElementById('recording-options').click();}],
+      ['Customize Controls','settings',showSettings],
+      ['Remove Ads (Go Pro)','spark',actions.paywall]
+    ];
+    for(const [label,id,fn] of items)list.append(button(label,id,fn,'omni-menu-item'));
+    if(Capacitor.getPlatform()!=='ios')list.prepend(button('Draw Over Other Apps (Creator Pen)','layers',showOverlay,'omni-menu-item'));
     body.append(list);
   }
   function selectControl(body,label,id,values,currentValue,change){const wrap=node('label',label);const select=node('select');select.id=id;for(const [value,text]of values){const o=node('option',text);o.value=value;select.append(o);}select.value=String(currentValue);select.onchange=()=>{change(select.value);save();};wrap.append(select);body.append(wrap);}

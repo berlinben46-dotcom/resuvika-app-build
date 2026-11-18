@@ -31,7 +31,7 @@ class ClassNotepad {
         id: 'tab-1',
         classpadId: 'cp-1',
         title: 'Chapter 1: Motion & Laws',
-        content: '# 🎓 Chapter 1: Motion & Laws\n\n### 📌 Key Concepts\n• Newton\'s Second Law: F = m × a\n• Kinetic Energy: KE = ½mv²\n\n### 📐 Diagram & Drawing Space\n(Switch to \'✏️ Pen\' above to draw graphs & diagrams directly on this page!)\n\n### ☑ Homework Checklist\n- [ ] Review lecture formulas\n- [ ] Practice vector diagram',
+        content: '🎓 Chapter 1: Motion & Laws\n\n📌 Key Concepts:\n• Newton\'s Second Law: F = m × a\n• Kinetic Energy: KE = ½mv²\n\n📐 Diagram & Drawing Space:\n(Tap \'✏️ Pen\' at the top to draw graphs & diagrams directly on this page!)\n\n☑ Homework Checklist:\n☐ Review lecture formulas\n☐ Practice vector diagram',
         inkData: null,
         bg: 'white'
       },
@@ -39,7 +39,7 @@ class ClassNotepad {
         id: 'tab-2',
         classpadId: 'cp-1',
         title: 'Chapter 2: Geometry',
-        content: '## 📐 Right Triangle & Theorem\n\n• Formula: a² + b² = c²\n• Switch to Grid paper (📐) above and use ✏️ Pen to draw triangles!',
+        content: '📐 Right Triangle & Theorem\n\n• Formula: a² + b² = c²\n• Tap Grid paper (📐) and use ✏️ Pen to draw triangles!',
         inkData: null,
         bg: 'grid'
       },
@@ -47,7 +47,7 @@ class ClassNotepad {
         id: 'tab-3',
         classpadId: 'cp-2',
         title: 'Video & Class Plan',
-        content: '## 🎥 Lecture & Video Outline\n\n• 0:00 - 1:00: Topic Introduction\n• 1:00 - 5:00: Live Screen Pen Demo\n- [ ] Share summary on WhatsApp',
+        content: '🎥 Lecture & Video Outline\n\n• 0:00 - 1:00: Topic Introduction\n• 1:00 - 5:00: Live Screen Pen Demo\n☐ Share summary on WhatsApp',
         inkData: null,
         bg: 'ruled'
       }
