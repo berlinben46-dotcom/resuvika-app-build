@@ -72,6 +72,7 @@ export function initMobileShell(actions){
       ['Add Next Blank Page (+ Page)','rect',()=>{actions.closeSheet();window.drawingCanvas.addNewPage?.();}],
       ['Scroll / Pan Canvas','touch',()=>{choose('pan');actions.closeSheet();actions.toast('Drag anywhere to scroll down, up, left or right');}],
       ['Class Notes (Full Screen)','text',()=>{actions.closeSheet();document.body.classList.remove('menus-hidden','tablet-tools-hidden');document.getElementById('floating-notepad').classList.remove('hidden');}],
+      ['Class Voice Notes (Record & Play)','record',()=>{actions.closeSheet();actions.voiceNotes?.();}],
       ['All Drawing Tools','layers',showAllTools],
       ['Boards & Multi-Page Export','board',actions.boards],
       ['Undo','undo',()=>editAction(()=>window.drawingCanvas.undo())],

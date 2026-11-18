@@ -8,6 +8,7 @@ import { Purchases, ENTITLEMENT_VERIFICATION_MODE } from '@revenuecat/purchases-
 import { trialState, entitlementActive, purchaseLabel, validatePairingLink } from './access.mjs';
 import { snapshot, validateDocument, LIBRARY_KEY } from './storage.mjs';
 import { initMobileShell, FloatingOverlay } from './shell.mjs';
+import { createVoiceNotesManager } from './voice-notes.mjs';
 
 const config = __MOBILE_CONFIG__;
 const native = Capacitor.isNativePlatform();
@@ -330,9 +331,11 @@ async function start(){
       }
     });
   }
-  window.mobileShell=initMobileShell({canEdit:window.mobileCanEdit,paywall:openPaywall,boards:showLibrary,pairing:showPairing,sheet,closeSheet,persist,fitCanvas:fitCanvasToScreen,syncAccess:syncOverlayAccess,toast:window.showToast,report});
+  const voiceManager = createVoiceNotesManager({ sheet, el, button, shareFile, toast: window.showToast });
+  window.mobileShell=initMobileShell({canEdit:window.mobileCanEdit,paywall:openPaywall,boards:showLibrary,pairing:showPairing,voiceNotes:voiceManager.showVoiceNotes,sheet,closeSheet,persist,fitCanvas:fitCanvasToScreen,syncAccess:syncOverlayAccess,toast:window.showToast,report});
 
   // Wire up simple top & bottom kid-friendly controls
+  $('mob-btn-voice')?.addEventListener('click', () => voiceManager.toggleRecording().catch(report));
   $('mob-btn-notes')?.addEventListener('click', () => {
     $('floating-notepad')?.classList.remove('hidden');
   });
