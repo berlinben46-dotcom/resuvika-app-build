@@ -1,0 +1,20 @@
+'use strict';
+// Deliberately no networking: the app owns its offline whiteboard. Laptop pairing opens
+// the existing token-protected companion in the system browser, outside the native bridge.
+class OfflineSync {
+  constructor() { this.remoteStrokes = new Map(); this.epoch = 0; }
+  changed() { window.dispatchEvent(new Event('boardchanged')); }
+  broadcastAddElement() { this.changed(); }
+  broadcastUpdateElements() { this.changed(); }
+  broadcastClear() { this.epoch++; this.changed(); }
+  broadcastSetBackground() { this.changed(); }
+  broadcastNotepad() { this.changed(); }
+  clearTransient() { this.remoteStrokes.clear(); }
+  ink(type,value) { window.dispatchEvent(new CustomEvent('omniball-ink',{detail:{type,value}})); }
+  broadcastStrokeStart(value) { this.ink('start',structuredClone(value)); }
+  broadcastStrokePoint(value) { this.ink('point',value); }
+  broadcastStrokeEnd() { this.ink('end'); }
+  broadcastShapePreview(value) { this.ink('shape',structuredClone(value)); }
+  broadcastLaser() {}
+}
+window.SyncManager = OfflineSync;
