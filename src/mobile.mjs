@@ -326,6 +326,70 @@ async function start(){
   window.classNotepad.shareToWhatsApp=()=>{const text=$('np-editor').value;if(!text.trim()){window.showToast('Write a note before sharing.');return;}openExternal(`https://wa.me/?text=${encodeURIComponent(text)}`).catch(report);};
   document.querySelector('.notepad-title').textContent='Your notes';
   const rename=button('Rename note',()=>{const notes=window.classNotepad,tab=notes.tabs.find(t=>t.id===notes.activeTabId);const b=sheet('Name your note');const name=el('input');name.value=tab?.title||'';name.maxLength=120;name.setAttribute('aria-label','Note title');b.append(name,button('Save name',async()=>{if(!name.value.trim())return;tab.title=name.value.trim();notes.renderTabs();notes.saveToStorage();await persist();closeSheet();},'primary'));});rename.id='rename-note';$('np-tabs-bar').after(rename);
+
+  // Auto White / Black Background Theme Setting
+  const THEME_KEY = 'resuvika_theme_mode_v1';
+  const mediaDark = window.matchMedia?.('(prefers-color-scheme: dark)');
+  const applyTheme = (mode) => {
+    const chosen = ['auto', 'light', 'dark'].includes(mode) ? mode : 'auto';
+    localStorage.setItem(THEME_KEY, chosen);
+    const isDark = chosen === 'dark' || (chosen === 'auto' && Boolean(mediaDark?.matches));
+    document.body.classList.toggle('theme-dark', isDark);
+    document.body.classList.toggle('theme-light', !isDark);
+    document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+    if (window.drawingCanvas && !window.drawingCanvas.elements.length) {
+      window.drawingCanvas.setBackground(isDark ? 'blackboard' : 'whiteboard', true);
+    }
+  };
+  window.setAppTheme = applyTheme;
+  applyTheme(localStorage.getItem(THEME_KEY) || 'auto');
+  mediaDark?.addEventListener?.('change', () => {
+    if ((localStorage.getItem(THEME_KEY) || 'auto') === 'auto') applyTheme('auto');
+  });
+
+  // Apple Notes Minimalist Bar & Floating Capsule Controls
+  const notepadPanel = $('floating-notepad');
+  const toggleNotePanel = (cls) => {
+    for (const c of ['show-format', 'show-tabs', 'show-export']) {
+      if (c !== cls) notepadPanel?.classList.remove(c);
+    }
+    notepadPanel?.classList.toggle(cls);
+  };
+  $('np-dock-aa')?.addEventListener('click', () => toggleNotePanel('show-format'));
+  $('np-dock-tabs')?.addEventListener('click', () => toggleNotePanel('show-tabs'));
+  $('np-dock-attach')?.addEventListener('click', () => toggleNotePanel('show-export'));
+  $('np-dock-check')?.addEventListener('click', () => {
+    const ed = $('np-editor');
+    if (!ed) return;
+    const pos = ed.selectionStart ?? ed.value.length;
+    const prefix = pos > 0 && ed.value[pos - 1] !== '\n' ? '\n☐ ' : '☐ ';
+    ed.value = ed.value.slice(0, pos) + prefix + ed.value.slice(pos);
+    ed.focus();
+    ed.selectionStart = ed.selectionEnd = pos + prefix.length;
+    ed.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  $('np-dock-draw')?.addEventListener('click', () => workspace.show('board').catch(report));
+  $('np-apple-share')?.addEventListener('click', () => window.classNotepad.shareNative());
+  $('np-apple-done')?.addEventListener('click', () => {
+    $('np-editor')?.blur();
+    notepadPanel?.classList.remove('show-format', 'show-tabs', 'show-export');
+    persist().catch(report);
+    window.showToast?.('Saved');
+  });
+  $('np-apple-more')?.addEventListener('click', () => {
+    const b = sheet('Note options & theme');
+    const curTheme = localStorage.getItem(THEME_KEY) || 'auto';
+    b.append(el('h2', 'Background theme'));
+    const row = el('div', null, 'omni-setting-row');
+    for (const [m, lbl] of [['auto', 'Auto'], ['light', 'White'], ['dark', 'Black']]) {
+      row.append(button(lbl, () => { applyTheme(m); closeSheet(); }, curTheme === m ? 'primary' : ''));
+    }
+    b.append(row, el('h2', 'Actions'),
+      button('Formatting tools (Aa)', () => { closeSheet(); toggleNotePanel('show-format'); }),
+      button('Switch / Add note', () => { closeSheet(); toggleNotePanel('show-tabs'); }),
+      button('Export PDF / WhatsApp / Stamp', () => { closeSheet(); toggleNotePanel('show-export'); })
+    );
+  });
   // Register Back before any store-network request can delay startup.
   if(native)await App.addListener('backButton',run(async()=>{if(!await workspace.back()){await persist();await App.minimizeApp();}}));
   window.addEventListener('resize',()=>{const board=window.drawingCanvas;if(!board.elements.length&&!board.clearUndo?.length&&!board.isDrawing&&!['INPUT','TEXTAREA'].includes(document.activeElement?.tagName)){board.setBoardSize(window.innerWidth,window.innerHeight);queueSave();}});

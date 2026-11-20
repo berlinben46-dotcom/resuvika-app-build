@@ -227,3 +227,91 @@ body.mobile-app { color:#202e29; background:var(--workspace-paper); -webkit-text
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 @media(forced-colors:active){button{border:1px solid ButtonText!important}.workspace-nav button[aria-current]{outline:2px solid Highlight}}
 @media print {body>*{display:none!important}body #mobile-dialog,body #mobile-sheet,body .note-print{display:block!important;position:static!important;overflow:visible!important;max-height:none!important;height:auto!important;background:white!important;box-shadow:none!important;padding:0!important}#mobile-sheet>*:not(.note-print){display:none!important}}
+
+/* Apple Notes Minimalist Design + Auto White / Black Theme */
+.mobile-app .notepad-search-row,
+.mobile-app .notepad-tabs-bar,
+.mobile-app #rename-note,
+.mobile-app .notepad-format-bar,
+.mobile-app .np-editor-meta-bar,
+.mobile-app .notepad-footer { display:none!important; }
+
+.mobile-app #floating-notepad.show-tabs .notepad-search-row,
+.mobile-app #floating-notepad.show-tabs .notepad-tabs-bar,
+.mobile-app #floating-notepad.show-tabs #rename-note { display:flex!important; }
+.mobile-app #floating-notepad.show-format .notepad-format-bar,
+.mobile-app #floating-notepad.show-format .np-editor-meta-bar { display:flex!important; }
+.mobile-app #floating-notepad.show-export .notepad-footer { display:flex!important; }
+
+.mobile-app .np-circle-btn,
+.mobile-app .np-done-circle {
+  width:40px; height:40px; border-radius:50%; border:0;
+  display:grid; place-items:center; cursor:pointer; flex-shrink:0;
+}
+.mobile-app .np-circle-btn { background:rgba(120,120,128,.16); color:inherit; }
+.mobile-app .np-done-circle { background:#eab308; color:#ffffff; box-shadow:0 4px 14px rgba(234,179,8,.35); }
+.mobile-app .np-pill-group {
+  display:inline-flex; align-items:center; gap:4px;
+  background:rgba(120,120,128,.16); border-radius:999px; padding:4px 6px;
+}
+.mobile-app .np-pill-icon {
+  width:34px; height:32px; border:0; border-radius:999px;
+  background:transparent; color:inherit; display:grid; place-items:center; cursor:pointer;
+}
+.mobile-app .notepad-header { padding:10px 16px 8px!important; border-bottom:0!important; }
+.mobile-app .notepad-header-actions { display:flex; align-items:center; gap:10px; }
+
+.mobile-app .np-apple-dock {
+  position:relative; z-index:20;
+  margin:6px auto calc(10px + var(--keyboard-lift,0px));
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 12px; border-radius:999px;
+  background:rgba(120,120,128,.16);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  box-shadow:0 6px 24px rgba(0,0,0,.12);
+}
+.mobile-app .np-dock-btn {
+  min-width:44px; height:38px; border:0; border-radius:999px;
+  background:transparent; color:inherit; font-size:16px; font-weight:600;
+  display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.mobile-app #np-editor { caret-color:#eab308; }
+
+/* Auto / Light / Dark Pure Black & Crisp White Themes */
+body.mobile-app.theme-light {
+  --workspace-paper:#ffffff; --workspace-border:#e5e7eb;
+  background:#ffffff; color:#0f172a;
+}
+body.mobile-app.theme-light #floating-notepad,
+body.mobile-app.theme-light .notepad-header,
+body.mobile-app.theme-light #np-editor { background:#ffffff!important; color:#0f172a!important; }
+
+body.mobile-app.theme-dark {
+  --workspace-paper:#000000; --workspace-border:#27272a; --workspace-muted:#a1a1aa;
+  background:#000000; color:#f8fafc;
+}
+body.mobile-app.theme-dark .workspace-header,
+body.mobile-app.theme-dark .workspace-nav,
+body.mobile-app.theme-dark .workspace-page,
+body.mobile-app.theme-dark .mobile-sheet,
+body.mobile-app.theme-dark #floating-notepad,
+body.mobile-app.theme-dark .notepad-header,
+body.mobile-app.theme-dark .notepad-search-row,
+body.mobile-app.theme-dark .notepad-tabs-bar,
+body.mobile-app.theme-dark .notepad-format-bar,
+body.mobile-app.theme-dark .np-editor-meta-bar,
+body.mobile-app.theme-dark .notepad-footer,
+body.mobile-app.theme-dark #np-editor { background:#000000!important; color:#f8fafc!important; border-color:#27272a!important; }
+body.mobile-app.theme-dark .workspace-brand strong,
+body.mobile-app.theme-dark .workspace-welcome,
+body.mobile-app.theme-dark .mobile-sheet h1 { color:#f8fafc!important; }
+body.mobile-app.theme-dark .np-circle-btn,
+body.mobile-app.theme-dark .np-pill-group,
+body.mobile-app.theme-dark .np-apple-dock { background:#1c1c1e!important; color:#f8fafc!important; }
+body.mobile-app.theme-dark .document-card,
+body.mobile-app.theme-dark .connection-card,
+body.mobile-app.theme-dark .np-tab,
+body.mobile-app.theme-dark .mobile-sheet button:not(.primary) { background:#1c1c1e!important; color:#f8fafc!important; border-color:#2c2c2e!important; }
+body.mobile-app.theme-dark .mobile-sheet input,
+body.mobile-app.theme-dark .mobile-sheet select,
+body.mobile-app.theme-dark .np-search-bar { background:#1c1c1e!important; color:#f8fafc!important; border-color:#3f3f46!important; }

@@ -224,17 +224,30 @@
     </div>
   </header>
 
-  <!-- Inbuilt Notepad (Evernote / OneNote style with WhatsApp & 1-Click Share) -->
+  <!-- Minimal Apple-Notes Style Notepad -->
   <aside id="floating-notepad" class="glass-panel notepad-panel hidden">
     <div class="notepad-header" id="notepad-drag-handle">
       <div class="notepad-title-group">
-        <span class="notepad-icon">📝</span>
-        <span class="notepad-title">Resuvika Notes & Notebooks</span>
+        <button class="np-circle-btn" id="np-close-btn" title="Back to Board" aria-label="Back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <span class="notepad-icon" style="display:none;">📝</span>
+        <span class="notepad-title" style="display:none;">Your notes</span>
       </div>
       <div class="notepad-header-actions">
-        <button class="np-action-btn" id="np-pin-btn" title="Pin note on top">📌</button>
-        <button class="np-action-btn" id="np-minimize-btn" title="Minimize">−</button>
-        <button class="np-action-btn" id="np-close-btn" title="Close">✕</button>
+        <button class="np-action-btn" id="np-pin-btn" title="Pin note on top" style="display:none;">📌</button>
+        <button class="np-action-btn" id="np-minimize-btn" title="Minimize" style="display:none;">−</button>
+        <div class="np-pill-group">
+          <button type="button" class="np-pill-icon" id="np-apple-share" title="Share Note" aria-label="Share Note">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+          </button>
+          <button type="button" class="np-pill-icon" id="np-apple-more" title="More Options & Theme" aria-label="More Options">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>
+          </button>
+        </div>
+        <button type="button" class="np-done-circle" id="np-apple-done" title="Done" aria-label="Done">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
       </div>
     </div>
 
@@ -303,6 +316,23 @@
           📌 Stamp
         </button>
       </div>
+    </div>
+
+    <!-- Minimal Apple-Notes Bottom Floating Capsule -->
+    <div class="np-apple-dock" id="np-apple-dock" aria-label="Quick note tools">
+      <button type="button" class="np-dock-btn" id="np-dock-aa" title="Text Formatting">Aa</button>
+      <button type="button" class="np-dock-btn" id="np-dock-check" title="Checklist">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>
+      </button>
+      <button type="button" class="np-dock-btn" id="np-dock-tabs" title="Notes &amp; Folders">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+      </button>
+      <button type="button" class="np-dock-btn" id="np-dock-attach" title="Share &amp; Export PDF">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+      </button>
+      <button type="button" class="np-dock-btn" id="np-dock-draw" title="Draw on Board">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>
+      </button>
     </div>
   </aside>
 
