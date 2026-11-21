@@ -11,6 +11,9 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(DeviceLinkPlugin.class);
         registerPlugin(PrintDocumentPlugin.class);
         super.onCreate(state);
+        if (this.bridge != null && this.bridge.getWebView() != null) {
+            this.bridge.getWebView().clearCache(true);
+        }
         applyOrientation();
     }
     public void applyOrientation() {
@@ -20,7 +23,5 @@ public class MainActivity extends BridgeActivity {
     }
     @Override public void onResume() {
         super.onResume();
-        // Returning to the board removes global windows; the service saves its ink draft.
-        if(OverlayService.running)stopService(new Intent(this,OverlayService.class));
     }
 }
