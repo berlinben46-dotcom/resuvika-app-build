@@ -145,25 +145,56 @@ class ClassNotepad {
       if (window.showToast) showToast('New note created');
     });
 
-    // Stamp to Canvas (Convert note into a floating visual card on board)
+    // Full-Page Crisp Vector Transfer to Whiteboard (no hazy cropped sticky)
     document.getElementById('np-stamp-to-canvas')?.addEventListener('click', () => {
       const activeTab = this.tabs.find(t => t.id === this.activeTabId);
-      if (!activeTab || !activeTab.content.trim()) {
+      const rawText = (document.getElementById('np-editor')?.value || activeTab?.content || '').trim();
+      if (!rawText) {
         if (window.showToast) showToast('Note is empty');
         return;
       }
 
-      if (window.drawingCanvas) {
-        window.drawingCanvas.addElement({
-          type: 'sticky',
-          x: Math.max(40, Math.round(window.innerWidth / 4)),
-          y: Math.max(40, Math.round(window.innerHeight / 4)),
-          width: 280,
-          height: 200,
-          text: activeTab.content,
-          bg: '#fef08a' // Warm sticky note yellow
-        });
-        if (window.showToast) showToast('📌 Note stamped onto drawing canvas!');
+      const board = window.drawingCanvas;
+      if (board) {
+        const fontSize = Math.max(16, Math.min(26, Math.round((board.width || 380) / 20)));
+        const lineHeight = Math.round(fontSize * 1.45);
+        const maxChars = Math.max(24, Math.floor(((board.width || 380) - 48) / (fontSize * 0.56)));
+        const inkColor = (board.currentBackground === 'blackboard' || board.currentBackground === 'chalkboard') ? '#f8fafc' : '#0f172a';
+
+        const wrappedLines = [];
+        for (const para of rawText.split(/\r?\n/)) {
+          const trimmed = para.trim();
+          if (!trimmed) { wrappedLines.push(''); continue; }
+          let cur = '';
+          for (const word of trimmed.split(/\s+/)) {
+            if ((cur + ' ' + word).trim().length > maxChars && cur) {
+              wrappedLines.push(cur);
+              cur = word;
+            } else {
+              cur = (cur + ' ' + word).trim();
+            }
+          }
+          if (cur) wrappedLines.push(cur);
+        }
+
+        const startX = 24;
+        let y = 110;
+        for (const line of wrappedLines) {
+          if (line) {
+            board.addElement({
+              type: 'text',
+              x: startX,
+              y,
+              text: line,
+              color: inkColor,
+              fontSize
+            });
+          }
+          y += lineHeight;
+        }
+        window.dispatchEvent(new Event('boardchanged'));
+        window.omniball?.workspace?.show?.('board');
+        if (window.showToast) showToast('Full note transferred to Whiteboard in crisp HD!');
       }
     });
 

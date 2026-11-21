@@ -358,6 +358,61 @@ async function start(){
   $('np-dock-aa')?.addEventListener('click', () => toggleNotePanel('show-format'));
   $('np-dock-tabs')?.addEventListener('click', () => toggleNotePanel('show-tabs'));
   $('np-dock-attach')?.addEventListener('click', () => toggleNotePanel('show-export'));
+
+  // 2-finger swipe right to open Notes/Folders, swipe left or tap editor to auto-hide
+  let twoFingerX = null;
+  notepadPanel?.addEventListener('touchstart', (e) => {
+    twoFingerX = e.touches?.length === 2 ? (e.touches[0].clientX + e.touches[1].clientX) / 2 : null;
+  }, { passive: true });
+  notepadPanel?.addEventListener('touchmove', (e) => {
+    if (twoFingerX !== null && e.touches?.length === 2) {
+      const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      if (cx - twoFingerX > 45) {
+        notepadPanel.classList.add('show-tabs');
+        twoFingerX = null;
+      } else if (cx - twoFingerX < -45) {
+        notepadPanel.classList.remove('show-tabs', 'show-format', 'show-export');
+        twoFingerX = null;
+      }
+    }
+  }, { passive: true });
+  notepadPanel?.addEventListener('touchend', () => { twoFingerX = null; }, { passive: true });
+  $('np-editor')?.addEventListener('pointerdown', () => {
+    notepadPanel?.classList.remove('show-tabs', 'show-format', 'show-export');
+  });
+
+  // Insert Photo / Diagram onto Whiteboard for annotation
+  $('bq-photo')?.addEventListener('click', () => $('bq-photo-input')?.click());
+  $('bq-photo-input')?.addEventListener('change', (ev) => {
+    const file = ev.target?.files?.[0];
+    if (!file || !window.drawingCanvas) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const b = window.drawingCanvas;
+        const maxW = Math.min(b.width - 32, 680);
+        const scale = Math.min(1, maxW / img.width);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        b.addElement({
+          type: 'image',
+          x: Math.round((b.width - w) / 2 - (b.panX || 0)),
+          y: Math.round(110 - (b.panY || 0)),
+          width: w, height: h,
+          src: c.toDataURL('image/jpeg', 0.85)
+        });
+        window.dispatchEvent(new Event('boardchanged'));
+        window.showToast?.('Photo added to Board! Draw or highlight over it.');
+      };
+      img.src = String(reader.result || '');
+    };
+    reader.readAsDataURL(file);
+    ev.target.value = '';
+  });
   $('np-dock-check')?.addEventListener('click', () => {
     const ed = $('np-editor');
     if (!ed) return;

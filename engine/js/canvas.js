@@ -105,7 +105,6 @@ class DrawingCanvas {
     }
 
     const pt = this.getPointerCoords(e);
-    if (pt.x < 0 || pt.y < 0 || pt.x > this.width || pt.y > this.height) return;
 
     // 1. ON-SCREEN TEXT TOOL: Click anywhere on screen to type directly!
     if (this.activeTool === 'text') {
@@ -435,6 +434,25 @@ class DrawingCanvas {
       this.renderTextElement(ctx, elem);
     } else if (elem.type === 'sticky') {
       this.renderStickyNote(ctx, elem);
+    } else if (elem.type === 'image') {
+      this.renderImageElement(ctx, elem);
+    }
+  }
+
+  renderImageElement(ctx, elem) {
+    if (!elem.src) return;
+    if (!this._imgCache) this._imgCache = new Map();
+    let img = this._imgCache.get(elem.src);
+    if (!img) {
+      img = new Image();
+      img.onload = () => this.redrawAllElements();
+      img.src = elem.src;
+      this._imgCache.set(elem.src, img);
+    }
+    if (img.complete && img.naturalWidth > 0) {
+      ctx.save();
+      ctx.drawImage(img, elem.x || 0, elem.y || 0, elem.width || img.naturalWidth, elem.height || img.naturalHeight);
+      ctx.restore();
     }
   }
 
