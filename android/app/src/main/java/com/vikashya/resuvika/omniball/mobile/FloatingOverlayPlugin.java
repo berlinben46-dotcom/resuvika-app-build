@@ -12,9 +12,12 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.PermissionState;
+import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
+import androidx.activity.result.ActivityResult;
+import android.speech.RecognizerIntent;
 
 @CapacitorPlugin(name="FloatingOverlay", permissions={@Permission(alias="notifications",strings={Manifest.permission.POST_NOTIFICATIONS})})
 public class FloatingOverlayPlugin extends Plugin {
@@ -43,11 +46,37 @@ public class FloatingOverlayPlugin extends Plugin {
         if(until<=System.currentTimeMillis())getContext().stopService(new Intent(getContext(),OverlayService.class));
         call.resolve();
     }
+    @PluginMethod public void openCastSettings(PluginCall call){
+        getActivity().runOnUiThread(()->{
+            try{getActivity().startActivity(new Intent(Settings.ACTION_CAST_SETTINGS));call.resolve();}
+            catch(Exception e){
+                try{getActivity().startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));call.resolve();}
+                catch(Exception ex){call.reject("Swipe down Quick Settings and tap Smart View / Cast to mirror to your TV.");}
+            }
+        });
+    }
+    @PluginMethod public void dictateSpeech(PluginCall call){
+        String lang=call.getString("language","");
+        Intent intent=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        if(lang!=null&&!lang.isEmpty())intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,lang);
+        else intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,java.util.Locale.getDefault().toLanguageTag());
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT,"Speak in any language to write...");
+        try{startActivityForResult(call,intent,"speechResult");}
+        catch(Exception e){call.reject("Speech-to-text is unavailable on this device.");}
+    }
+    @ActivityCallback private void speechResult(PluginCall call, ActivityResult result){
+        if(call==null)return;
+        if(result.getResultCode()==android.app.Activity.RESULT_OK&&result.getData()!=null){
+            java.util.ArrayList<String> matches=result.getData().getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            String text=(matches!=null&&!matches.isEmpty())?matches.get(0):"";
+            JSObject r=new JSObject();r.put("text",text);call.resolve(r);
+        }else{
+            JSObject r=new JSObject();r.put("text","");r.put("cancelled",true);call.resolve(r);
+        }
+    }
     @PluginMethod public void start(PluginCall call){
         if(!Settings.canDrawOverlays(getContext())){call.reject("First allow Display over other apps, then return here and tap Start floating tools.");return;}
-        if(getContext().getSharedPreferences("omniball_overlay",Context.MODE_PRIVATE).getLong("accessUntil",0)<=System.currentTimeMillis()){
-            call.reject("Open Full version to start your trial or restore your purchase.");return;
-        }
         if(Build.VERSION.SDK_INT>=33&&getPermissionState("notifications")!=PermissionState.GRANTED){requestPermissionForAlias("notifications",call,"notificationResult");return;}
         launch(call);
     }

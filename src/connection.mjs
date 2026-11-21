@@ -38,6 +38,10 @@ export function initConnection(actions){
   function card(main,title,description){const c=node('section',null,'connection-card');c.append(node('h2',title),node('p',description));main.append(c);return c;}
   async function show(main){
     main.append(node('div','BETTER TOGETHER','eyebrow'),node('h1','Make a connection'),node('p','Send a thought across. Draw something together. Keep your devices in the same creative flow.','page-intro'));
+    if(android){
+      const tvCast=card(main,'Wireless TV Mirror (Smart View / Cast)','Mirror your whiteboard and notes directly to any Smart TV on your Wi-Fi — no IP address or browser link needed.');
+      tvCast.append(action('Cast Screen to Smart TV',()=>registerPlugin('FloatingOverlay').openCastSettings(),'primary'));
+    }
     const bluetooth=card(main,'Bluetooth nearby','Pair your devices in Android settings first. Start the Omniball companion on your Windows laptop, or tap Receive on another Android device. Keep Omniball open during a session.');
     const status=node('p',statusText(),'device-link-status connection-status');status.setAttribute('role','status');bluetooth.append(status);
     if(!android){bluetooth.append(node('p','Bluetooth is available in the installed Android app. Emulators may not expose Bluetooth hardware. Use Wi-Fi pairing or system sharing here.'));}
@@ -59,8 +63,7 @@ export function initConnection(actions){
     if(!main.isConnected)return;
     if(!inbox.length)received.append(node('p','Your next idea could arrive from anywhere. Received files will appear here.'));
     for(const item of inbox){const row=node('div',null,'received-file');row.append(node('p',item.name),action(item.kind==='board'?'Open received board':'Save received file',async()=>{if(item.kind==='board')await actions.receiveBoard(validateDocument(await item.blob.text()));else if(item.blob.type==='application/pdf')await actions.documents.importBlob(item.name,item.blob);else await actions.shareFile(item.name,await base64(item.blob),item.blob.type,true);},'primary'));received.append(row);}
-    const wifi=card(main,'Connect over Wi-Fi','For the existing desktop app, use the laptop’s token-protected pairing link. Both devices need the same Wi-Fi or hotspot.');wifi.append(action('Open laptop pairing',actions.showPairing));
-    const share=card(main,'Share your way','Send an image or board backup using Android’s share menu. Compatible apps such as Quick Share can send it to a nearby laptop.');share.append(action('Share board backup',actions.exportBackup),action('Share board image',actions.exportPng));
+    const share=card(main,'Share your way','Send an image or board backup using Android’s share menu. Compatible apps such as Quick Share can send it cleanly to any nearby laptop or phone.');share.append(action('Share board backup',actions.exportBackup),action('Share board image',actions.exportPng));
     updateStatus();renderRemote();
   }
   if(android){

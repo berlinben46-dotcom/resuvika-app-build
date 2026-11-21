@@ -330,11 +330,28 @@
       <button type="button" class="np-dock-btn" id="np-dock-attach" title="Share &amp; Export PDF">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
       </button>
+      <button type="button" class="np-dock-btn" id="np-dock-voice" title="Speak to Write (Any Language)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+      </button>
       <button type="button" class="np-dock-btn" id="np-dock-draw" title="Draw on Board">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/></svg>
       </button>
     </div>
   </aside>
+
+  <!-- Sleek Board Quick Pen & Color Capsule (Better-Than-Apple-Notes Drawing Bar) -->
+  <div class="board-quick-dock" id="board-quick-dock" aria-label="Quick pen and ink colors">
+    <button type="button" class="bq-tool active" data-bq-tool="pen" title="Pen">Pen</button>
+    <button type="button" class="bq-tool" data-bq-tool="highlighter" title="Highlighter">Mark</button>
+    <button type="button" class="bq-tool" data-bq-tool="eraser-stroke" title="Eraser">Erase</button>
+    <button type="button" class="bq-tool" id="bq-undo" title="Undo">Undo</button>
+    <span class="bq-sep"></span>
+    <button type="button" class="bq-dot active" data-bq-color="#116b58" style="background:#116b58" title="Teal Ink"></button>
+    <button type="button" class="bq-dot" data-bq-color="#2563eb" style="background:#2563eb" title="Blue Ink"></button>
+    <button type="button" class="bq-dot" data-bq-color="#ef4444" style="background:#ef4444" title="Red Ink"></button>
+    <button type="button" class="bq-dot" data-bq-color="#eab308" style="background:#eab308" title="Amber Ink"></button>
+    <button type="button" class="bq-dot" data-bq-color="#0f172a" style="background:#0f172a" title="Obsidian Ink"></button>
+  </div>
 
   <!-- Clean Bottom Ad Banner Strip (Free with Ads + 1-Click Remove Ads) -->
   <aside id="app-ad-banner" class="app-ad-strip" aria-label="Sponsor Banner">

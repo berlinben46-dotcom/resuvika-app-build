@@ -369,6 +369,73 @@ async function start(){
     ed.dispatchEvent(new Event('input', { bubbles: true }));
   });
   $('np-dock-draw')?.addEventListener('click', () => workspace.show('board').catch(report));
+  $('np-dock-voice')?.addEventListener('click', async () => {
+    let spoken = '';
+    if (native && platform === 'android') {
+      try {
+        const res = await FloatingOverlay.dictateSpeech({ language: '' });
+        if (!res?.cancelled) spoken = String(res?.text || '').trim();
+      } catch (err) {
+        report(err);
+      }
+    } else {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SR) {
+        spoken = await new Promise((resolve) => {
+          const rec = new SR();
+          rec.lang = navigator.language || 'en-IN';
+          rec.onresult = (e) => resolve(e.results?.[0]?.[0]?.transcript || '');
+          rec.onerror = () => resolve('');
+          rec.onend = () => resolve('');
+          rec.start();
+        });
+      } else {
+        window.showToast?.('Voice dictation is available on Android/iOS.');
+      }
+    }
+    if (spoken) {
+      const ed = $('np-editor');
+      if (ed) {
+        ed.value = (ed.value.trim() ? `${ed.value}\n` : '') + spoken;
+        ed.dispatchEvent(new Event('input', { bubbles: true }));
+        window.classNotepad?.saveToStorage?.();
+        window.showToast?.('Dictated text added!');
+      }
+    }
+  });
+
+  // Board Quick Pen & Ink Color Capsule
+  document.querySelectorAll('.bq-tool[data-bq-tool]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const tool = btn.dataset.bqTool;
+      if (!tool || !window.drawingCanvas) return;
+      window.drawingCanvas.activeTool = tool;
+      window.toolPreferences?.save?.();
+      document.querySelectorAll('.bq-tool[data-bq-tool]').forEach((b) => b.classList.toggle('active', b === btn));
+    });
+  });
+  $('bq-undo')?.addEventListener('click', () => window.drawingCanvas?.undo());
+  document.querySelectorAll('.bq-dot').forEach((dot) => {
+    dot.addEventListener('click', () => {
+      const color = dot.dataset.bqColor;
+      if (!color || !window.drawingCanvas) return;
+      window.drawingCanvas.currentColor = color;
+      window.toolPreferences?.save?.();
+      document.querySelectorAll('.bq-dot').forEach((d) => d.classList.toggle('active', d === dot));
+    });
+  });
+
+  // Paper style inside Note options
+  const PAPER_KEY = 'resuvika_note_paper_v1';
+  const applyNotePaper = (p) => {
+    const ed = $('np-editor');
+    if (!ed) return;
+    ed.classList.remove('paper-plain', 'paper-ruled', 'paper-grid', 'paper-dots');
+    ed.classList.add(`paper-${p || 'plain'}`);
+    localStorage.setItem(PAPER_KEY, p || 'plain');
+  };
+  applyNotePaper(localStorage.getItem(PAPER_KEY) || 'plain');
+
   $('np-apple-share')?.addEventListener('click', () => window.classNotepad.shareNative());
   $('np-apple-done')?.addEventListener('click', () => {
     $('np-editor')?.blur();
@@ -379,12 +446,18 @@ async function start(){
   $('np-apple-more')?.addEventListener('click', () => {
     const b = sheet('Note options & theme');
     const curTheme = localStorage.getItem(THEME_KEY) || 'auto';
+    const curPaper = localStorage.getItem(PAPER_KEY) || 'plain';
     b.append(el('h2', 'Background theme'));
     const row = el('div', null, 'omni-setting-row');
     for (const [m, lbl] of [['auto', 'Auto'], ['light', 'White'], ['dark', 'Black']]) {
       row.append(button(lbl, () => { applyTheme(m); closeSheet(); }, curTheme === m ? 'primary' : ''));
     }
-    b.append(row, el('h2', 'Actions'),
+    b.append(row, el('h2', 'Note paper style'));
+    const pRow = el('div', null, 'omni-setting-row');
+    for (const [p, lbl] of [['plain', 'Plain'], ['ruled', 'Ruled'], ['grid', 'Grid'], ['dots', 'Dots']]) {
+      pRow.append(button(lbl, () => { applyNotePaper(p); closeSheet(); }, curPaper === p ? 'primary' : ''));
+    }
+    b.append(pRow, el('h2', 'Actions'),
       button('Formatting tools (Aa)', () => { closeSheet(); toggleNotePanel('show-format'); }),
       button('Switch / Add note', () => { closeSheet(); toggleNotePanel('show-tabs'); }),
       button('Export PDF / WhatsApp / Stamp', () => { closeSheet(); toggleNotePanel('show-export'); })

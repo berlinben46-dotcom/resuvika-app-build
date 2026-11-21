@@ -315,3 +315,42 @@ body.mobile-app.theme-dark .mobile-sheet button:not(.primary) { background:#1c1c
 body.mobile-app.theme-dark .mobile-sheet input,
 body.mobile-app.theme-dark .mobile-sheet select,
 body.mobile-app.theme-dark .np-search-bar { background:#1c1c1e!important; color:#f8fafc!important; border-color:#3f3f46!important; }
+
+/* Board Quick Pen & Ink Color Capsule */
+.mobile-app .board-quick-dock {
+  position:fixed; left:50%; transform:translateX(-50%);
+  bottom:calc(120px + env(safe-area-inset-bottom)); z-index:850;
+  display:none; align-items:center; gap:5px; padding:6px 10px; border-radius:999px;
+  background:rgba(255,255,255,.92); border:1px solid rgba(15,23,42,.09);
+  box-shadow:0 8px 28px rgba(15,23,42,.12);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+}
+.mobile-app[data-view=board]:not(.recording-mode) .board-quick-dock { display:inline-flex; }
+.mobile-app.theme-dark .board-quick-dock { background:rgba(28,28,30,.92); border-color:#2c2c2e; color:#f8fafc; }
+.mobile-app .bq-tool {
+  border:0; background:transparent; color:inherit; font-size:11px; font-weight:700;
+  padding:6px 9px; border-radius:999px; cursor:pointer; min-height:32px;
+}
+.mobile-app .bq-tool.active { background:#eab308; color:#111827; }
+.mobile-app .bq-sep { width:1px; height:16px; background:rgba(120,120,128,.25); margin:0 2px; }
+.mobile-app .bq-dot {
+  width:20px; height:20px; border-radius:50%; border:2px solid #fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.18); cursor:pointer; flex-shrink:0;
+}
+.mobile-app .bq-dot.active { box-shadow:0 0 0 2.5px #eab308; transform:scale(1.15); }
+
+/* Note Paper Patterns (Plain / Ruled / Grid / Dots) */
+.mobile-app #np-editor.paper-ruled {
+  background-image:repeating-linear-gradient(transparent, transparent 31px, rgba(120,120,128,.16) 32px)!important;
+  background-attachment:local!important;
+}
+.mobile-app #np-editor.paper-grid {
+  background-image:linear-gradient(rgba(120,120,128,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(120,120,128,.12) 1px, transparent 1px)!important;
+  background-size:24px 24px!important;
+  background-attachment:local!important;
+}
+.mobile-app #np-editor.paper-dots {
+  background-image:radial-gradient(rgba(120,120,128,.28) 1.2px, transparent 1.2px)!important;
+  background-size:20px 20px!important;
+  background-attachment:local!important;
+}
