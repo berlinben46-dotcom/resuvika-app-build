@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Resuvika Notes</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-light" data-screen="folders">
+
+  <!-- PAGE 1: FOLDERS & LISTS HOME -->
+  <section id="screen-folders" class="screen">
+    <header class="ios-top-bar">
+      <h1 class="large-title">Folders</h1>
+      <div class="top-actions">
+        <button type="button" id="btn-open-settings" class="circle-btn" aria-label="Settings" title="Settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+        <button type="button" id="btn-new-folder" class="gold-circle-btn" aria-label="New Folder" title="New Folder">+</button>
+      </div>
+    </header>
+
+    <div class="search-wrap">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="search" id="global-search" class="ios-search" placeholder="Search notes, tasks, reminders">
+    </div>
+
+    <div id="global-search-results" class="grouped-card hidden"></div>
+
+    <div id="folders-main-groups">
+      <div class="grouped-card">
+        <button type="button" class="folder-row" id="row-all-notes">
+          <span class="row-left">
+            <span class="gold-ico">📁</span>
+            <span class="row-title">All Notes</span>
+          </span>
+          <span class="row-right"><span id="count-all-notes">0</span> <span class="chev">›</span></span>
+        </button>
+        <button type="button" class="folder-row" id="row-todo-list">
+          <span class="row-left">
+            <span class="gold-ico">☑</span>
+            <span class="row-title">To-Do List</span>
+          </span>
+          <span class="row-right"><span id="count-todos">0</span> <span class="chev">›</span></span>
+        </button>
+        <button type="button" class="folder-row" id="row-reminders">
+          <span class="row-left">
+            <span class="gold-ico">🔔</span>
+            <span class="row-title">Reminders</span>
+          </span>
+          <span class="row-right"><span id="count-reminders">0</span> <span class="chev">›</span></span>
+        </button>
+      </div>
+
+      <div class="section-label">SUBJECTS</div>
+      <div class="grouped-card" id="subjects-list"></div>
+    </div>
+
+    <footer class="folders-bottom-dock">
+      <div class="mode-capsule">
+        <button type="button" class="cap-tab active" id="nav-tab-notes">Notes</button>
+        <button type="button" class="cap-tab" id="nav-tab-board">Whiteboard</button>
+      </div>
+      <button type="button" class="gold-compose-btn" id="btn-compose-from-folders" aria-label="New Note" title="New Note">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </footer>
+  </section>
+
+  <!-- PAGE 2: NOTES LIST -->
+  <section id="screen-notes-list" class="screen">
+    <header class="nav-bar">
+      <button type="button" class="gold-back-btn" id="btn-list-back">‹ Folders</button>
+      <button type="button" class="circle-btn" id="btn-list-more" aria-label="Folder options">•••</button>
+    </header>
+    <div class="sub-header">
+      <h1 class="large-title" id="list-folder-title">All Notes</h1>
+    </div>
+    <div class="search-wrap">
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="search" id="list-search" class="ios-search" placeholder="Search notes...">
+    </div>
+    <div id="notes-list-container" class="scroll-body"></div>
+    <footer class="list-bottom-bar">
+      <span class="note-count-lbl" id="list-note-count">0 Notes</span>
+      <button type="button" class="gold-compose-btn" id="btn-compose-from-list" aria-label="Compose Note" title="New Note">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+    </footer>
+  </section>
+
+  <!-- PAGE 3: FOCUSED NOTE EDITOR (APPLE NOTES MINIMAL SHELL) -->
+  <section id="screen-editor" class="screen">
+    <header class="editor-top-bar">
+      <button type="button" class="circle-btn" id="btn-editor-back" aria-label="Back to list">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div class="editor-right-pills">
+        <div class="pill-pair">
+          <button type="button" class="pill-ico-btn" id="btn-editor-share" aria-label="Share Note" title="Share Note">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+          </button>
+          <button type="button" class="pill-ico-btn" id="btn-editor-more" aria-label="Note Options" title="Note Options">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>
+          </button>
+        </div>
+        <button type="button" class="gold-circle-btn done-btn" id="btn-editor-done" aria-label="Done">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="editor-paper paper-plain" id="editor-paper">
+      <input type="text" id="editor-title" class="editor-title-input" placeholder="Title">
+      <div id="interactive-checklist-bar" class="interactive-checklist-bar"></div>
+      <textarea id="editor-body" class="editor-body-input" placeholder="Start writing, tap 🎙️ to dictate in any language, or tap ✏️ to sketch on Whiteboard..."></textarea>
+    </div>
+
+    <div class="editor-subpanel hidden" id="editor-format-panel">
+      <button type="button" class="sub-pill" data-fmt="h1">H1</button>
+      <button type="button" class="sub-pill" data-fmt="bold"><b>B</b></button>
+      <button type="button" class="sub-pill" data-fmt="bullet">• List</button>
+      <button type="button" class="sub-pill" data-fmt="quote">❝ Quote</button>
+      <button type="button" class="sub-pill" id="btn-font-dec">A−</button>
+      <button type="button" class="sub-pill" id="btn-font-inc">A+</button>
+    </div>
+
+    <div class="editor-subpanel hidden" id="editor-paper-panel">
+      <button type="button" class="sub-pill" data-paper="plain">Plain</button>
+      <button type="button" class="sub-pill" data-paper="ruled">Ruled</button>
+      <button type="button" class="sub-pill" data-paper="grid">Grid</button>
+      <button type="button" class="sub-pill" data-paper="dots">Dots</button>
+    </div>
+
+    <div class="editor-subpanel hidden" id="editor-attach-panel">
+      <button type="button" class="sub-pill primary-gold" id="btn-to-board-hd">To Board (HD)</button>
+      <button type="button" class="sub-pill" id="btn-export-pdf">PDF</button>
+      <button type="button" class="sub-pill" id="btn-share-wa">WhatsApp</button>
+      <button type="button" class="sub-pill" id="btn-export-md">.md</button>
+    </div>
+
+    <footer class="editor-dock" id="editor-dock" aria-label="Note tools">
+      <button type="button" class="dock-btn" id="dock-aa" title="Text Format">Aa</button>
+      <button type="button" class="dock-btn" id="dock-check" title="Add Checklist">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>
+      </button>
+      <button type="button" class="dock-btn" id="dock-paper" title="Paper Style">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      </button>
+      <button type="button" class="dock-btn" id="dock-attach" title="To Board, PDF &amp; Export">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+      </button>
+      <button type="button" class="dock-btn" id="dock-voice" title="Speak to Write (Any Language)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+      </button>
+      <button type="button" class="dock-btn" id="dock-board" title="Open Whiteboard">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+      </button>
+    </footer>
+  </section>
+
+  <!-- TO-DO LIST SCREEN -->
+  <section id="screen-todo" class="screen">
+    <header class="nav-bar">
+      <button type="button" class="gold-back-btn" id="btn-todo-back">‹ Folders</button>
+      <span id="todo-progress-lbl" class="muted-lbl">0/0 done</span>
+    </header>
+    <div class="sub-header"><h1 class="large-title">To-Do List</h1></div>
+    <div class="inline-form-card">
+      <input type="text" id="todo-input" class="ios-input" placeholder="Add a new task...">
+      <button type="button" id="btn-add-todo" class="gold-pill-btn">Add</button>
+    </div>
+    <div id="todo-list-items" class="scroll-body grouped-card-list"></div>
+  </section>
+
+  <!-- REMINDERS SCREEN -->
+  <section id="screen-reminders" class="screen">
+    <header class="nav-bar">
+      <button type="button" class="gold-back-btn" id="btn-rem-back">‹ Folders</button>
+    </header>
+    <div class="sub-header"><h1 class="large-title">Reminders</h1></div>
+    <div class="grouped-card form-stack">
+      <input type="text" id="rem-title-input" class="ios-input" placeholder="Reminder title (e.g. Live Physics Class)">
+      <input type="datetime-local" id="rem-time-input" class="ios-input">
+      <button type="button" id="btn-add-rem" class="gold-pill-btn full">Schedule Notification</button>
+    </div>
+    <div id="rem-list-items" class="scroll-body grouped-card-list"></div>
+  </section>
+
+  <!-- PAGE 4: PRO WHITEBOARD & PEN STUDIO -->
+  <section id="screen-board" class="screen">
+    <canvas id="wb-bg" class="wb-canvas"></canvas>
+    <canvas id="wb-draw" class="wb-canvas"></canvas>
+
+    <header class="wb-top-bar">
+      <button type="button" class="frosted-pill" id="btn-wb-notes">‹ Notes</button>
+      <div class="frosted-pill page-pill">
+        <button type="button" id="btn-wb-prev" class="mini-nav">‹</button>
+        <span id="wb-page-label">1 / 1</span>
+        <button type="button" id="btn-wb-next" class="mini-nav">›</button>
+        <button type="button" id="btn-wb-add-page" class="mini-nav plus">+</button>
+      </div>
+      <button type="button" class="frosted-pill" id="btn-wb-connect">Share / TV Cast</button>
+    </header>
+
+    <button type="button" class="frosted-pill overlay-pill" id="btn-draw-over-apps">Draw Over Apps</button>
+
+    <div class="wb-bottom-dock">
+      <button type="button" class="wb-tool active" data-wb-tool="pen" title="Pen">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+      </button>
+      <button type="button" class="wb-tool" data-wb-tool="highlighter" title="Highlighter">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>
+      </button>
+      <button type="button" class="wb-tool" data-wb-tool="pan" title="Scroll Canvas">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M18 11V6a2 2 0 0 0-4 0v4"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+      </button>
+      <button type="button" class="wb-tool" data-wb-tool="eraser-stroke" title="Eraser">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/></svg>
+      </button>
+      <button type="button" class="wb-tool" id="btn-wb-undo" title="Undo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+      </button>
+      <button type="button" class="wb-tool" id="btn-wb-photo" title="Insert Photo">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+      </button>
+      <input type="file" id="wb-photo-input" accept="image/*" hidden>
+      <span class="dock-sep"></span>
+      <button type="button" class="ink-dot active" data-ink="#0f172a" style="background:#0f172a" aria-label="Black ink"></button>
+      <button type="button" class="ink-dot" data-ink="#2563eb" style="background:#2563eb" aria-label="Blue ink"></button>
+      <button type="button" class="ink-dot" data-ink="#ef4444" style="background:#ef4444" aria-label="Red ink"></button>
+      <button type="button" class="ink-dot" data-ink="#116b58" style="background:#116b58" aria-label="Teal ink"></button>
+      <button type="button" class="ink-dot" data-ink="#eab308" style="background:#eab308" aria-label="Gold ink"></button>
+    </div>
+
+    <div id="ad-strip" class="ad-strip">
+      <span>Resuvika Notes · All Tools Free</span>
+      <button type="button" id="btn-remove-ads" class="ad-cta">Remove Ads</button>
+    </div>
+  </section>
+
+  <!-- MODAL SHEET (Settings, Share, TV Cast, Theme, New Folder) -->
+  <div id="modal-backdrop" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="modal-title">Options</h2>
+        <button type="button" id="btn-modal-close" class="circle-btn">✕</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+  <script type="module" src="app.bundle.js"></script>
+</body>
+</html>

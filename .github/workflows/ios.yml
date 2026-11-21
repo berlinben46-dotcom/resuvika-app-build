@@ -1,0 +1,39 @@
+name: iPhone and iPad simulator build
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 40
+    env:
+      RC_IOS_PUBLIC_KEY: ${{ vars.RC_IOS_PUBLIC_KEY }}
+      PRIVACY_URL: ${{ vars.PRIVACY_URL }}
+      TERMS_URL: ${{ vars.TERMS_URL }}
+      SUPPORT_EMAIL: ${{ vars.SUPPORT_EMAIL }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run sync
+      - name: Build without Apple distribution credentials
+        run: |
+          if [ "$(xcodebuild -version | head -1 | cut -d ' ' -f2 | cut -d . -f1)" -lt 26 ]; then
+            XCODE_APP=$(find /Applications -maxdepth 1 -name 'Xcode_26*.app' | sort | tail -1)
+            test -n "$XCODE_APP"
+            sudo xcode-select --switch "$XCODE_APP/Contents/Developer"
+          fi
+          xcodebuild -version
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build/ios CODE_SIGNING_ALLOWED=NO build
+          ditto -c -k --sequesterRsrc --keepParent build/ios/Build/Products/Debug-iphonesimulator/App.app build/Resuvika-Omniball-iOS-Simulator.zip
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Resuvika-Omniball-iPhone-iPad-Simulator
+          path: build/Resuvika-Omniball-iOS-Simulator.zip
+          if-no-files-found: error
+          retention-days: 14
